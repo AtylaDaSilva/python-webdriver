@@ -195,7 +195,7 @@ class ChromeDriver:
 
         pdf_path = p / f
 
-        logger.debug(f"Imprimindo PDF da página no caminho: {p}")
+        logger.debug(f"{self._label}Imprimindo PDF da página no caminho: {p}")
 
         # Create directory, if it does not exist
         pdf_path.parent.mkdir(parents=True, exist_ok=True)
@@ -244,18 +244,18 @@ class ChromeDriver:
         path.parent.mkdir(parents=True, exist_ok=True)
         result = self.get_driver().save_screenshot(path)
         if result:
-            logger.debug(f"Captura de tela sava no caminho: {path}")
+            logger.debug(f"{self._label}Captura de tela sava no caminho: {path}")
             return path
         else:
-            logger.error(f"Falha ao salvar captura de tela no caminho: {path}")
+            logger.error(f"{self._label}Falha ao salvar captura de tela no caminho: {path}")
             return None
 
     def enable_network_throttling(
         self,
-        throttling_profile: NetworkThrottlingProfile,
+        throttling_profile: ChromeNetworkThrottlingProfile,
     ):
         logger.debug(
-            f"Habilitando limitação de rede com perfil: {throttling_profile.name}"
+            f"{self._label}Habilitando limitação de rede com perfil: {throttling_profile.name}"
         )
         self.get_driver().execute_cdp_cmd("Network.enable", {})
         self.get_driver().execute_cdp_cmd(
