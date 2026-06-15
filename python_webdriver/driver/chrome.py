@@ -112,28 +112,19 @@ class ChromeDriver:
         return element
 
     def clear(
-        self, el_type: ByType, el_identifier: str, wait_for_element: bool = True
+        self, element: WebElement
     ) -> WebElement:
         self._check_webdriver_started()
-        if wait_for_element:
-            self.wait_for(
-                el_type=el_type,
-                el_identifier=el_identifier,
-                until_func=conditions.presence_of_element_located,
-            )
-        logger.debug(f"Limpando o elemento {el_identifier}...")
-        element = self.get_driver().find_element(el_type, el_identifier)
+        logger.debug(f"Limpando o elemento {element}...")
         element.clear()
         return element
 
     def type_and_enter(
         self,
-        el_type: ByType,
-        el_identifier: str,
+        element: WebElement,
         text: str,
-        wait_for_element: bool = True,
     ) -> WebElement:
-        element = self.type(el_type, el_identifier, text, wait_for_element)
+        element = self.type(element, text)
         logger.debug("Apertando botão Enter...")
         element.send_keys(Keys.ENTER)
         return element
@@ -146,30 +137,6 @@ class ChromeDriver:
         logger.debug(f"Clicando no elemento {element}...")
         element.click()
         return element
-
-    def wait_for(
-        self,
-        el_type: ByType,
-        el_identifier: str,
-        until_func: Callable,
-        retry_on_exception: bool = True,
-        max_retries: int | None = None
-    ) -> WebElement:
-        self._check_webdriver_started()
-        logger.debug(f"Aguardando elemento {el_identifier}...")
-        if not retry_on_exception:
-            return WebDriverWait(self.get_driver(), self.timeout_seconds).until(
-                until_func((el_type, el_identifier))
-            )
-        else:
-
-            def wait_and_retry():
-                time.sleep(self.sleep_seconds)
-                return WebDriverWait(self.get_driver(), self.timeout_seconds).until(
-                    until_func((el_type, el_identifier))
-                )
-
-            return retry(func=wait_and_retry, max_attempts=max_retries or self.max_retry_attempts)
 
     def scroll_element_into_view(self, element: WebElement) -> None:
         self._check_webdriver_started()

@@ -16,9 +16,7 @@ class WebDriverElementLocator:
         return self.by_attribute(attr_name="id", attr_value=id)
 
 
-class WebDriverElementListLocator:
-    def __init__(self, driver: WebDriver):
-        self.driver = driver
+class WebDriverElementListLocator(WebDriverElementLocator):
 
     def by_attribute(self, attr_name: str, attr_value: str) -> list[WebElement]:
         return self.driver.find_elements(by=By.XPATH, value=f'//*[@{attr_name}="{attr_value}"]')
