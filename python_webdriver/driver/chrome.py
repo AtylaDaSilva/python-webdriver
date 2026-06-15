@@ -1,5 +1,5 @@
 from python_webdriver.utils.functions import retry
-from python_webdriver.driver.element import WebDriverElement, WebDriverElementList
+from python_webdriver.driver.element import WebDriverElementLocator, WebDriverElementListLocator
 from python_webdriver.driver.exceptions import (
     WebDriverNotStartedException,
     WebDriverNotInstantiatedException,
@@ -74,7 +74,7 @@ class ChromeDriver:
         """
         if not self.is_driver_started():
             logger.debug(
-                f"{self._label} Iniciando ChromeDriver..."
+                f"{self._label}Iniciando ChromeDriver..."
             )
             opt = webdriver.ChromeOptions()
             opt.binary_location = str(self.driver_path)
@@ -82,41 +82,32 @@ class ChromeDriver:
                 opt.add_argument(o)
             self._driver = webdriver.Chrome(opt)
             self._is_driver_started = True
+            self.implicitly_wait_for(self.implicit_wait_seconds)
         return self.get_driver()
 
     def quit_driver(self):
         if self.is_driver_started():
-            logger.debug(f"{self._label} Fechando ChromeDriver...")
+            logger.debug(f"{self._label}Fechando ChromeDriver...")
             self.get_driver().quit()
             self._is_driver_started = False
 
     def goto(self, url: str):
         self._check_webdriver_started()
-        logger.debug(f"{self._label} Navegando para {url}...")
+        logger.debug(f"{self._label}Navegando para {url}...")
         self.get_driver().get(url)
 
-    def find_element(self) -> WebDriverElement:
-        return WebDriverElement(self.get_driver())
+    def find_element(self) -> WebDriverElementLocator:
+        return WebDriverElementLocator(self.get_driver())
 
-    def find_elements(self) -> WebDriverElementList:
-        return WebDriverElementList(self.get_driver())
+    def find_elements(self) -> WebDriverElementListLocator:
+        return WebDriverElementListLocator(self.get_driver())
 
     def type(
         self,
-        el_type: ByType,
-        el_identifier: str,
+        element: WebElement,
         text: str,
-        wait_for_element: bool = True,
     ) -> WebElement:
         self._check_webdriver_started()
-        if wait_for_element:
-            self.wait_for(
-                el_type=el_type,
-                el_identifier=el_identifier,
-                until_func=conditions.element_to_be_clickable,
-            )
-        logger.debug(f"Digitando no elemento {el_identifier}...")
-        element = self.get_driver().find_element(el_type, el_identifier)
         element.send_keys(text)
         return element
 
@@ -149,39 +140,11 @@ class ChromeDriver:
 
     def click(
         self,
-        el_type: ByType,
-        el_identifier: str,
-        wait_for_element: bool = True,
-        retry_on_exception: bool = True,
-        max_retries: int | None = None
+        element: WebElement,
     ) -> WebElement:
         self._check_webdriver_started()
-        logger.debug(f"Clicando no elemento {el_identifier}...")
-        if wait_for_element:
-            element = self.wait_for(
-                el_type=el_type,
-                el_identifier=el_identifier,
-                until_func=conditions.element_to_be_clickable,
-                retry_on_exception=retry_on_exception,
-                max_retries=max_retries
-            )
-        else:
-            element = self.get_driver().find_element(el_type, el_identifier)
-        if not retry_on_exception:
-            element.click()
-        else:
-
-            def wait_and_click():
-                time.sleep(self.sleep_seconds)
-                el = self.wait_for(  # Refresh element reference
-                    el_type=el_type,
-                    el_identifier=el_identifier,
-                    until_func=conditions.element_to_be_clickable,
-                    retry_on_exception=False,  # wait_for retries by default
-                )
-                el.click()
-
-            retry(func=wait_and_click, max_attempts=max_retries or self.max_retry_attempts)
+        logger.debug(f"Clicando no elemento {element}...")
+        element.click()
         return element
 
     def wait_for(
@@ -224,7 +187,7 @@ class ChromeDriver:
 
     def implicitly_wait_for(self, seconds: float) -> None:
         logger.debug(
-            f"Configurando driver para aguardar implicitamente por {seconds} segundo(s)..."
+            f"{self._label}Configurando driver para aguardar implicitamente por {seconds} segundo(s)..."
         )
         self.get_driver().implicitly_wait(seconds)
 
@@ -354,7 +317,7 @@ class DriverLabel:
         self.label = label
 
     def __repr__(self) -> str:
-        return '' if not self.label else f'(Driver: {self.label})'
+        return '' if not self.label else f'({self.label}) '
 
 
 # ------------------------------------------------------------------------------------

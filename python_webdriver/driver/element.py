@@ -2,7 +2,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver, WebElement
 
 
-class WebDriverElement:
+class WebDriverElementLocator:
     def __init__(self, driver: WebDriver):
         self.driver = driver
 
@@ -12,7 +12,11 @@ class WebDriverElement:
     def by_tag(self, tag_name: str) -> WebElement:
         return self.driver.find_element(by=By.XPATH, value=f'//{tag_name}')
 
-class WebDriverElementList:
+    def by_id(self, id: str):
+        return self.by_attribute(attr_name="id", attr_value=id)
+
+
+class WebDriverElementListLocator:
     def __init__(self, driver: WebDriver):
         self.driver = driver
 
