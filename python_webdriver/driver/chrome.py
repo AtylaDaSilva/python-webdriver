@@ -141,7 +141,7 @@ class ChromeDriver:
         self.get_driver().execute_script("arguments[0].scrollIntoView();", element)
         return element
 
-    def implicitly_wait_for(self, seconds: float) -> None:
+    def implicitly_wait_for(self, seconds: float = 30) -> None:
         logger.debug(
             f"{self._label}Configurando driver para aguardar implicitamente por {seconds} segundo(s)..."
         )
@@ -294,7 +294,7 @@ class DriverLabel:
 # ------------------------------------------------------------------------------------
 
 
-class NetworkThrottlingProfile(Enum):
+class ChromeNetworkThrottlingProfile(Enum):
     OFFLINE = {
         "offline": True,
         "downloadThroughput": 0,
@@ -325,12 +325,3 @@ class NetworkThrottlingProfile(Enum):
         "uploadThroughput": 3 * 1024 * 1024 / 8,
         "latency": 20,
     }
-
-
-# ------------------------------------------------------------------------------------
-#                                         Exceptions
-# ------------------------------------------------------------------------------------
-
-
-class IncompatibleBrowserException(Exception):
-    pass
