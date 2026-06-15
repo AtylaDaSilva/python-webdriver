@@ -222,15 +222,33 @@ class ChromeDriver:
 
         return decoded_data
 
-    def save_screenshot_page(self, file_dir: str) -> None:
+    def save_screenshot_page(self, file_dir: str) -> Path | None:
+        """
+            Salva screenshot da página atual no caminho especificado em *file_dir*.
+
+            Nota: Se save_screenshot_page for invocado antes que a página carregue propriamente, a imagem sairá vazia (ou toda em branco).
+
+            Args:
+                file_dir (str): Caminho completo do diretório de destino (sem o nome do arquivo).
+                    O diretório é criado automaticamente, caso não exista.
+
+            Returns:
+                Caminho do arquivo PNG escrito, ou None caso falhe.
+
+            Raises:
+                WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+                OSError: Se não for possível criar o diretório ou gravar o arquivo.
+        """
         self._check_webdriver_started()
-        path = Path(f"{file_dir}/{timestamp_as_file_name('png')}")
+        path = Path(f"{file_dir}/{datetime.now().strftime("%Y%m%d_%H%M%S.%f")}.png")
         path.parent.mkdir(parents=True, exist_ok=True)
         result = self.get_driver().save_screenshot(path)
         if result:
             logger.debug(f"Captura de tela sava no caminho: {path}")
+            return path
         else:
             logger.error(f"Falha ao salvar captura de tela no caminho: {path}")
+            return None
 
     def enable_network_throttling(
         self,
