@@ -1,28 +1,25 @@
-from python_webdriver.utils.functions import retry
 from python_webdriver.driver.element import WebDriverElementLocator, WebDriverElementListLocator
 from python_webdriver.driver.exceptions import (
+    WebDriverException,
     WebDriverNotStartedException,
     WebDriverNotInstantiatedException,
+    InvalidFileExtensionException
 )
 from selenium import webdriver
-from selenium.webdriver.common.by import ByType
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webdriver import WebElement, WebDriver
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as conditions
-from collections.abc import Callable
 from loguru import logger
 import base64
 from pathlib import Path
 from enum import Enum
-from os import PathLike
-import time
+from typing import Any
+from datetime import datetime
 
 
 class ChromeDriver:
     def __init__(
         self,
-        driver_path:  str | PathLike[str],
+        driver_path:  str | Path,
         implicit_wait_seconds: int,
         max_retry_attempts: int,
         driver_label: str | None = None,
@@ -115,7 +112,7 @@ class ChromeDriver:
         self, element: WebElement
     ) -> WebElement:
         self._check_webdriver_started()
-        logger.debug(f"Limpando o elemento {element}...")
+        logger.debug(f"{self._label}Limpando o elemento {element}...")
         element.clear()
         return element
 
@@ -125,7 +122,7 @@ class ChromeDriver:
         text: str,
     ) -> WebElement:
         element = self.type(element, text)
-        logger.debug("Apertando botão Enter...")
+        logger.debug(f"{self._label}Apertando botão Enter...")
         element.send_keys(Keys.ENTER)
         return element
 
@@ -134,22 +131,14 @@ class ChromeDriver:
         element: WebElement,
     ) -> WebElement:
         self._check_webdriver_started()
-        logger.debug(f"Clicando no elemento {element}...")
+        logger.debug(f"{self._label}Clicando no elemento {element}...")
         element.click()
         return element
 
-    def scroll_element_into_view(self, element: WebElement) -> None:
+    def scroll_element_into_view(self, element: WebElement) -> WebElement:
         self._check_webdriver_started()
-        logger.debug(f"Rolando até o elemento: {element}")
+        logger.debug(f"{self._label}Rolando até o elemento: {element}")
         self.get_driver().execute_script("arguments[0].scrollIntoView();", element)
-
-    def find_and_scroll_into_view(
-        self,
-        el_type: ByType,
-        el_identifier: str,
-    ):
-        element = self.find_element(el_type, el_identifier)
-        self.scroll_element_into_view(element)
         return element
 
     def implicitly_wait_for(self, seconds: float) -> None:
@@ -160,56 +149,56 @@ class ChromeDriver:
 
     def page_to_pdf(
         self,
-        file_path: str,
-        print_background: bool = True,
-        margin_top: int = 0,
-        margin_bottom: int = 0,
-        margin_left: int = 0,
-        margin_right: int = 0,
+        file_path: str | Path,
+        file_name: str | None = None,
         hide_elements: tuple[str, ...] = tuple(),
-        paper_width: float = 8.5,
-        paper_height: float = 11,
-        scale: float = 1,
-        fit_window: bool = True,
-    ):
+        options: dict[str, Any] = {}
+    ) -> bytes:
         """
-        Renderiza a página atual do navegador como PDF e salva no caminho especificado.
+        Renderiza a página atual do navegador como PDF e salva no caminho especificado em *file_path*.
 
-        Utiliza o Chrome DevTools Protocol (CDP) para gerar o PDF, portanto é
-        compatível apenas com o Chrome. Os diretórios intermediários do caminho
-        de destino são criados automaticamente, caso não existam.
+        Utiliza o comando *Page.printToPDF* do Chrome DevTools Protocol (CDP) para gerar o PDF, portanto é
+        compatível apenas com o Chrome.
 
         Args:
-            file_path (str): Caminho completo do arquivo PDF de destino (ex "output/relatorio.pdf").
-            print_background (bool): Se True, inclui cores e imagens na renderização. Padrão: True.
-            page_format (str): Formato do papel (ex: "A4", "Letter").
-                Padrão: "A4".
-            margin_top (int): Margem superior em pixels. Padrão: 0.
-            margin_bottom (int): Margem inferior em pixels. Padrão: 0.
-            margin_left (int): Margem esquerda em pixels. Padrão: 0.
-            margin_right (int): Margem direita em pixels. Padrão: 0.
-            hide_elements (tuple[str, ...]): Seletores CSS dos elementos que devem
-                ser ocultados antes da geração do PDF (ex: (".navbar", "#footer")).
-                Padrão: tupla vazia.
+            file_path (str): Caminho completo do diretório de destino (sem o nome do arquivo).
+                O diretório é criado automaticamente, caso não exista.
+            file_name:
+                Nome do arquivo, caso queira dar um nome específico. O nome padrão é o timestamp atual (formato "%Y%m%d_%H%M%S.%f")
+            hide_elements:
+                Tupla com seletores CSS dos elementos a esconder na página, para que não saiam no PDF.
+            options:
+                Dicionário com opções passadas ao método Page.printToPDF.
+                @see https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-printToPDF para a lista de opções.
+
+        Returns:
+            Bytes do arquivo PDF escrito.
 
         Raises:
             WebDriverNotStartedException: Se o WebDriver não foi iniciado.
-            IncompatibleBrowserException: Se o navegador em uso não for o Chrome.
             OSError: Se não for possível criar o diretório ou gravar o arquivo.
+            InvalidFileExtensionException caso a extensão do arquivo em *file_path* não for ".pdf".
+            WebDriverException caso haja alguma falha na execução do comando Page.printToPDF.
         """
         self._check_webdriver_started()
 
-        p = Path(file_path)
+        p = Path(file_path) if isinstance(file_path, str) else file_path
 
-        logger.debug(f"Imprimindo PDF da página no caminho: {file_path}")
+        if file_name:
+            f = Path(file_name)
+            expected = [".pdf", ".PDF"]
+            if f.suffix not in expected:
+                raise InvalidFileExtensionException(path=f, expected=expected, received=f.suffix)
+        else:
+            f = Path(f"{datetime.now().strftime("%Y%m%d_%H%M%S.%f")}.pdf")
 
-        if not isinstance(self.get_driver(), webdriver.Chrome):
-            raise IncompatibleBrowserException(
-                "This function is only supported for Chrome"
-            )
+
+        pdf_path = p / f
+
+        logger.debug(f"Imprimindo PDF da página no caminho: {p}")
 
         # Create directory, if it does not exist
-        p.parent.mkdir(parents=True, exist_ok=True)
+        pdf_path.parent.mkdir(parents=True, exist_ok=True)
 
         # Inject CSS to hide elements so they don't appear in the PDF
         for selector in hide_elements:
@@ -219,24 +208,19 @@ class ChromeDriver:
 
         # Use CDP to render page as PDF
         pdf_data = self.get_driver().execute_cdp_cmd(
-            "Page.printToPDF",
-            {
-                "printBackground": print_background,
-                #"format": page_format,
-                "marginTop": margin_top,
-                "marginBottom": margin_bottom,
-                "marginLeft": margin_left,
-                "marginRight": margin_right,
-                "paperWidth": paper_width,
-                "paperHeight": paper_height,
-                "scale": scale,
-                "fitWindow": fit_window,
-            },
+            cmd="Page.printToPDF",
+            cmd_args=options,
         )
 
+        if not pdf_data:
+            raise WebDriverException("Failed to print page to PDF.")
+
         # Decode and save
-        with open(p, "wb") as f:
-            f.write(base64.b64decode(pdf_data["data"]))
+        with open(pdf_path, "wb") as f:
+            decoded_data = base64.b64decode(pdf_data["data"])
+            f.write(decoded_data)
+
+        return decoded_data
 
     def save_screenshot_page(self, file_dir: str) -> None:
         self._check_webdriver_started()

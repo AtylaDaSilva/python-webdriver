@@ -15,6 +15,9 @@ class WebDriverElementLocator:
     def by_id(self, id: str):
         return self.by_attribute(attr_name="id", attr_value=id)
 
+    def by_class(self, class_name: str):
+        return self.by_attribute(attr_name="class", attr_value=class_name)
+
 
 class WebDriverElementListLocator(WebDriverElementLocator):
 
