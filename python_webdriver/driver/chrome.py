@@ -84,20 +84,60 @@ class ChromeDriver:
         return self.get_driver()
 
     def quit_driver(self):
+        """Encerra o navegador e marca o driver como não iniciado.
+
+        Raises:
+            WebDriverNotInstantiatedException: Se o ChromeDriver nunca foi instanciado.
+        """
         if self.is_driver_started():
             logger.debug(f"{self._label}Fechando ChromeDriver...")
             self.get_driver().quit()
             self._is_driver_started = False
 
     def goto(self, url: str):
+        """Navega para a URL informada.
+
+        Args:
+            url: Endereço da página a ser carregada.
+
+        Raises:
+            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+        """
         self._check_webdriver_started()
         logger.debug(f"{self._label}Navegando para {url}...")
         self.get_driver().get(url)
 
     def find_element(self, context: WebElement | None = None) -> WebDriverElementLocator:
+        """Retorna um localizador para buscar um único elemento na página.
+
+        Args:
+            context: Elemento pai opcional para restringir a busca. Se None,
+                a busca ocorre em toda a página.
+
+        Returns:
+            Instância de WebDriverElementLocator configurada com o driver atual.
+
+        Raises:
+            WebDriverNotInstantiatedException: Se o ChromeDriver ainda não foi
+                instanciado.
+        """
         return WebDriverElementLocator(self.get_driver(), context)
 
     def find_elements(self, context: WebElement | None = None) -> WebDriverElementListLocator:
+        """Retorna um localizador para buscar múltiplos elementos na página.
+
+        Args:
+            context: Elemento pai opcional para restringir a busca. Se None,
+                a busca ocorre em toda a página.
+
+        Returns:
+            Instância de WebDriverElementListLocator configurada com o driver
+            atual.
+
+        Raises:
+            WebDriverNotInstantiatedException: Se o ChromeDriver ainda não foi
+                instanciado.
+        """
         return WebDriverElementListLocator(self.get_driver(), context)
 
     def type(
@@ -105,6 +145,18 @@ class ChromeDriver:
         element: WebElement,
         text: str,
     ) -> WebElement:
+        """Insere texto no elemento informado.
+
+        Args:
+            element: Elemento alvo da digitação.
+            text: Texto a ser inserido.
+
+        Returns:
+            O mesmo elemento recebido, após a digitação.
+
+        Raises:
+            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+        """
         self._check_webdriver_started()
         logger.debug(f"{self._label}Inserindo texto no elemento {element}...")
         element.send_keys(text)
@@ -113,6 +165,17 @@ class ChromeDriver:
     def clear(
         self, element: WebElement
     ) -> WebElement:
+        """Limpa o conteúdo do elemento informado.
+
+        Args:
+            element: Elemento cujo conteúdo será removido.
+
+        Returns:
+            O mesmo elemento recebido, após a limpeza.
+
+        Raises:
+            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+        """
         self._check_webdriver_started()
         logger.debug(f"{self._label}Limpando o elemento {element}...")
         element.clear()
@@ -123,6 +186,18 @@ class ChromeDriver:
         element: WebElement,
         text: str,
     ) -> WebElement:
+        """Insere texto no elemento e pressiona Enter em seguida.
+
+        Args:
+            element: Elemento alvo da digitação.
+            text: Texto a ser inserido antes de pressionar Enter.
+
+        Returns:
+            O mesmo elemento recebido, após a digitação e o envio de Enter.
+
+        Raises:
+            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+        """
         element = self.type(element, text)
         logger.debug(f"{self._label}Apertando botão Enter...")
         element.send_keys(Keys.ENTER)
@@ -132,28 +207,77 @@ class ChromeDriver:
         self,
         element: WebElement,
     ) -> WebElement:
+        """Clica no elemento informado.
+
+        Args:
+            element: Elemento a ser clicado.
+
+        Returns:
+            O mesmo elemento recebido, após o clique.
+
+        Raises:
+            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+        """
         self._check_webdriver_started()
         logger.debug(f"{self._label}Clicando no elemento {element}...")
         element.click()
         return element
 
     def scroll_element_into_view(self, element: WebElement) -> WebElement:
+        """Rola a página até que o elemento fique visível na viewport.
+
+        Args:
+            element: Elemento que deve ser exibido na tela.
+
+        Returns:
+            O mesmo elemento recebido, após a rolagem.
+
+        Raises:
+            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+        """
         self._check_webdriver_started()
         logger.debug(f"{self._label}Rolando até o elemento: {element}")
         self.get_driver().execute_script("arguments[0].scrollIntoView();", element)
         return element
 
     def implicitly_wait_for(self, seconds: float = 30) -> None:
+        """Configura o tempo de espera implícita do WebDriver.
+
+        Args:
+            seconds: Tempo máximo, em segundos, que o driver aguardará por
+                elementos antes de falhar. Padrão é 30 segundos.
+
+        Raises:
+            WebDriverNotInstantiatedException: Se o ChromeDriver ainda não foi
+                instanciado.
+        """
         logger.debug(
             f"{self._label}Configurando driver para aguardar implicitamente por {seconds} segundo(s)..."
         )
         self.get_driver().implicitly_wait(seconds)
 
     def wait_for(self, element: WebElement) -> WebElementWait:
+        """Retorna um aguardador de condições explícitas para o elemento.
+
+        Args:
+            element: Elemento sobre o qual as condições de espera serão
+                avaliadas.
+
+        Returns:
+            Instância de WebElementWait configurada para o elemento informado.
+
+        Raises:
+            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+        """
         self._check_webdriver_started()
         return WebElementWait(self.get_driver(), element)
 
     def explicit_wait(self, seconds: float):
+        """Aguarda um intervalo fixo de tempo antes de continuar a execução.
+
+        Args:
+            seconds: Duração da pausa, em segundos.
+        """
         logger.debug(f"{self._label}Aguardando explicitamente por {seconds} segundo(s)...")
         sleep(seconds)
 
@@ -264,6 +388,16 @@ class ChromeDriver:
         self,
         throttling_profile: ChromeNetworkThrottlingProfile,
     ):
+        """Habilita limitação de rede via Chrome DevTools Protocol (CDP).
+
+        Args:
+            throttling_profile: Perfil de throttling a ser emulado (por
+                exemplo, SLOW_2G ou CELLULAR_4G).
+
+        Raises:
+            WebDriverNotInstantiatedException: Se o ChromeDriver ainda não foi
+                instanciado.
+        """
         logger.debug(
             f"{self._label}Habilitando limitação de rede com perfil: {throttling_profile.name}"
         )
