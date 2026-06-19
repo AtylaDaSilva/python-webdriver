@@ -1,4 +1,4 @@
-from python_webdriver.driver.element import WebDriverElementLocator, WebDriverElementListLocator
+from python_webdriver.driver.element import WebDriverElementLocator, WebDriverElementListLocator, WebElementWait
 from python_webdriver.driver.exceptions import (
     WebDriverException,
     WebDriverNotStartedException,
@@ -14,6 +14,7 @@ from pathlib import Path
 from enum import Enum
 from typing import Any
 from datetime import datetime
+from time import sleep
 
 
 class ChromeDriver:
@@ -93,11 +94,11 @@ class ChromeDriver:
         logger.debug(f"{self._label}Navegando para {url}...")
         self.get_driver().get(url)
 
-    def find_element(self) -> WebDriverElementLocator:
-        return WebDriverElementLocator(self.get_driver())
+    def find_element(self, context: WebElement | None = None) -> WebDriverElementLocator:
+        return WebDriverElementLocator(self.get_driver(), context)
 
-    def find_elements(self) -> WebDriverElementListLocator:
-        return WebDriverElementListLocator(self.get_driver())
+    def find_elements(self, context: WebElement | None = None) -> WebDriverElementListLocator:
+        return WebDriverElementListLocator(self.get_driver(), context)
 
     def type(
         self,
@@ -105,6 +106,7 @@ class ChromeDriver:
         text: str,
     ) -> WebElement:
         self._check_webdriver_started()
+        logger.debug(f"{self._label}Inserindo texto no elemento {element}...")
         element.send_keys(text)
         return element
 
@@ -146,6 +148,14 @@ class ChromeDriver:
             f"{self._label}Configurando driver para aguardar implicitamente por {seconds} segundo(s)..."
         )
         self.get_driver().implicitly_wait(seconds)
+
+    def wait_for(self, element: WebElement) -> WebElementWait:
+        self._check_webdriver_started()
+        return WebElementWait(self.get_driver(), element)
+
+    def explicit_wait(self, seconds: float):
+        logger.debug(f"{self._label}Aguardando explicitamente por {seconds} segundo(s)...")
+        sleep(seconds)
 
     def page_to_pdf(
         self,
