@@ -61,12 +61,18 @@ class ChromeDriver:
             "ChromeDriver ainda não foi instanciado."
         )
 
-    def start_driver(self, options: tuple[str, ...] = tuple()) -> WebDriver:
+    def start_driver(
+            self,
+            options: tuple[str, ...] = tuple(),
+            experimental_options: dict[str, Any] | None = None
+    ) -> WebDriver:
         """
         Inicia o navegador localizado em **self.driver_path** e retorna uma instância de WebDriver.
         Args:
             options:
                 Tupla de opções
+            experimental_options:
+                Dicionário com opções experimentais a serem passadas para o Chromium.
         Returns:
             Instância de WebDriver.
         """
@@ -78,6 +84,8 @@ class ChromeDriver:
             opt.binary_location = str(self.driver_path)
             for o in options:
                 opt.add_argument(o)
+            if experimental_options:
+                opt.add_experimental_option("prefs", experimental_options)
             self._driver = webdriver.Chrome(opt)
             self._is_driver_started = True
             self.implicitly_wait_for(self.implicit_wait_seconds)
