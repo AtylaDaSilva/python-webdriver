@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 class WebDriverException(Exception):
     pass
 
@@ -10,6 +11,7 @@ class WebDriverNotInstantiatedException(WebDriverException):
 
 class WebDriverNotStartedException(WebDriverException):
     pass
+
 
 class InvalidFileExtensionException(ValueError):
     def __init__(self, path: str | Path, expected: str | list[str], received: str):

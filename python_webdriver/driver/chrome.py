@@ -6,7 +6,7 @@ from python_webdriver.driver.exceptions import (
     WebDriverException,
     WebDriverNotStartedException,
     WebDriverNotInstantiatedException,
-    InvalidFileExtensionException
+    InvalidFileExtensionException,
 )
 from python_webdriver.functions import retry_on_exception
 from selenium import webdriver
@@ -25,7 +25,7 @@ from time import sleep
 class ChromeDriver:
     def __init__(
         self,
-        driver_path:  str | Path,
+        driver_path: str | Path,
         driver_label: str | None = None,
     ):
         """
@@ -59,9 +59,9 @@ class ChromeDriver:
         )
 
     def start_driver(
-            self,
-            options: tuple[str, ...] = tuple(),
-            experimental_options: dict[str, Any] | None = None
+        self,
+        options: tuple[str, ...] = tuple(),
+        experimental_options: dict[str, Any] | None = None,
     ) -> WebDriver:
         """
         Inicia o navegador localizado em **self.driver_path** e retorna uma instância de WebDriver.
@@ -74,9 +74,7 @@ class ChromeDriver:
             Instância de WebDriver.
         """
         if not self.is_driver_started():
-            logger.debug(
-                f"{self._label}Iniciando ChromeDriver..."
-            )
+            logger.debug(f"{self._label}Iniciando ChromeDriver...")
             opt = webdriver.ChromeOptions()
             opt.binary_location = str(self.driver_path)
             for o in options:
@@ -111,7 +109,9 @@ class ChromeDriver:
         logger.debug(f"{self._label}Navegando para {url}...")
         self.get_driver().get(url)
 
-    def find_element(self, context: WebElement | None = None) -> WebDriverElementLocator:
+    def find_element(
+        self, context: WebElement | None = None
+    ) -> WebDriverElementLocator:
         """Retorna um localizador para buscar um único elemento na página.
 
         Args:
@@ -132,7 +132,7 @@ class ChromeDriver:
         element: WebDriverElement,
         text: str,
         max_retries: int = 10,
-        timeout: float = 1
+        timeout: float = 1,
     ):
         """Insere um texto em um elemento da página.
 
@@ -147,6 +147,7 @@ class ChromeDriver:
         """
         self._check_webdriver_started()
         logger.debug(f"{self._label}Inserindo texto no elemento {element}...")
+
         def _action():
             el = element.get_element()
             el.send_keys(text)
@@ -158,10 +159,7 @@ class ChromeDriver:
         )
 
     def clear(
-        self,
-        element: WebDriverElement,
-        max_retries: int = 10,
-        timeout: float = 1
+        self, element: WebDriverElement, max_retries: int = 10, timeout: float = 1
     ):
         """Limpa o texto de um elemento da página.
 
@@ -175,6 +173,7 @@ class ChromeDriver:
         """
         self._check_webdriver_started()
         logger.debug(f"{self._label}Limpando o elemento {element}...")
+
         def _action():
             el = element.get_element()
             el.clear()
@@ -190,7 +189,7 @@ class ChromeDriver:
         element: WebDriverElement,
         text: str,
         max_retries: int = 10,
-        timeout: float = 1
+        timeout: float = 1,
     ):
         """Insere um texto em um elemento da página e pressiona a tecla Enter.
 
@@ -205,8 +204,10 @@ class ChromeDriver:
         """
         self.type(element, text)
         logger.debug(f"{self._label}Apertando botão Enter...")
+
         def _action():
             element.get_element().send_keys(Keys.ENTER)
+
         retry_on_exception(
             func=_action,
             max_attempts=max_retries,
@@ -214,10 +215,7 @@ class ChromeDriver:
         )
 
     def click(
-        self,
-        element: WebDriverElement,
-        max_retries: int = 10,
-        timeout: float = 1
+        self, element: WebDriverElement, max_retries: int = 10, timeout: float = 1
     ):
         """Clica em um elemento da página.
 
@@ -231,9 +229,11 @@ class ChromeDriver:
         """
         self._check_webdriver_started()
         logger.debug(f"{self._label}Clicando no elemento {element}...")
+
         def _action():
             el: WebElement = element.get_element()
             el.click()
+
         retry_on_exception(
             func=_action,
             max_attempts=max_retries,
@@ -241,25 +241,26 @@ class ChromeDriver:
         )
 
     def scroll_element_into_view(
-        self,
-        element: WebDriverElement,
-        max_retries: int = 10,
-        timeout: float = 1
+        self, element: WebDriverElement, max_retries: int = 10, timeout: float = 1
     ):
         """Rola a página até que o elemento especificado fique visível na tela.
 
-            Args:
-                element: Elemento até o qual a página será rolada.
-                max_retries: Número máximo de tentativas em caso de falha. Padrão é 10.
-                timeout: Intervalo em segundos entre cada tentativa. Padrão é 1.
+        Args:
+            element: Elemento até o qual a página será rolada.
+            max_retries: Número máximo de tentativas em caso de falha. Padrão é 10.
+            timeout: Intervalo em segundos entre cada tentativa. Padrão é 1.
 
-            Raises:
-                WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+        Raises:
+            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
         """
         self._check_webdriver_started()
         logger.debug(f"{self._label}Rolando até o elemento: {element}")
+
         def _action():
-            self.get_driver().execute_script("arguments[0].scrollIntoView();", element.get_element())
+            self.get_driver().execute_script(
+                "arguments[0].scrollIntoView();", element.get_element()
+            )
+
         retry_on_exception(
             func=_action,
             max_attempts=max_retries,
@@ -272,30 +273,34 @@ class ChromeDriver:
         x_offset: int,
         y_offset: int,
         max_retries: int = 10,
-        timeout: float = 1
+        timeout: float = 1,
     ):
         """Arrasta um elemento da página até a posição especificada pelos offsets X e Y.
 
-            Args:
-                element: Elemento a ser arrastado.
-                x_offset: Deslocamento horizontal em pixels em relação à posição atual do elemento.
-                y_offset: Deslocamento vertical em pixels em relação à posição atual do elemento.
-                max_retries: Número máximo de tentativas em caso de falha. Padrão é 10.
-                timeout: Intervalo em segundos entre cada tentativa. Padrão é 1.
+        Args:
+            element: Elemento a ser arrastado.
+            x_offset: Deslocamento horizontal em pixels em relação à posição atual do elemento.
+            y_offset: Deslocamento vertical em pixels em relação à posição atual do elemento.
+            max_retries: Número máximo de tentativas em caso de falha. Padrão é 10.
+            timeout: Intervalo em segundos entre cada tentativa. Padrão é 1.
 
-            Raises:
-                WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+        Raises:
+            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
         """
         self._check_webdriver_started()
         logger.debug(
             f"{self._label}Arrastando elemento {element} até os offsets X: {x_offset}, Y: {y_offset}..."
         )
+
         def _action():
             el: WebElement = element.get_element()
             action_chains = ActionChains(self.get_driver())
-            (action_chains
-             .drag_and_drop_by_offset(el, xoffset=x_offset, yoffset=y_offset)
-             .perform())
+            (
+                action_chains.drag_and_drop_by_offset(
+                    el, xoffset=x_offset, yoffset=y_offset
+                ).perform()
+            )
+
         retry_on_exception(
             func=_action,
             max_attempts=max_retries,
@@ -308,7 +313,9 @@ class ChromeDriver:
         Args:
             seconds: Duração da pausa, em segundos.
         """
-        logger.debug(f"{self._label}Aguardando explicitamente por {seconds} segundo(s)...")
+        logger.debug(
+            f"{self._label}Aguardando explicitamente por {seconds} segundo(s)..."
+        )
         sleep(seconds)
 
     def page_to_pdf(
@@ -316,7 +323,7 @@ class ChromeDriver:
         file_path: str | Path,
         file_name: str | None = None,
         hide_elements: tuple[str, ...] = tuple(),
-        options: dict[str, Any] = {}
+        options: dict[str, Any] = {},
     ) -> bytes:
         """
         Renderiza a página atual do navegador como PDF e salva no caminho especificado em *file_path*.
@@ -352,10 +359,11 @@ class ChromeDriver:
             f = Path(file_name)
             expected = [".pdf", ".PDF"]
             if f.suffix not in expected:
-                raise InvalidFileExtensionException(path=f, expected=expected, received=f.suffix)
+                raise InvalidFileExtensionException(
+                    path=f, expected=expected, received=f.suffix
+                )
         else:
             f = Path(f"{datetime.now().strftime("%Y%m%d_%H%M%S.%f")}.pdf")
-
 
         pdf_path = p / f
 
@@ -388,20 +396,20 @@ class ChromeDriver:
 
     def save_screenshot_page(self, file_dir: str) -> Path | None:
         """
-            Salva screenshot da página atual no caminho especificado em *file_dir*.
+        Salva screenshot da página atual no caminho especificado em *file_dir*.
 
-            Nota: Se save_screenshot_page for invocado antes que a página carregue propriamente, a imagem sairá vazia (ou toda em branco).
+        Nota: Se save_screenshot_page for invocado antes que a página carregue propriamente, a imagem sairá vazia (ou toda em branco).
 
-            Args:
-                file_dir (str): Caminho completo do diretório de destino (sem o nome do arquivo).
-                    O diretório é criado automaticamente, caso não exista.
+        Args:
+            file_dir (str): Caminho completo do diretório de destino (sem o nome do arquivo).
+                O diretório é criado automaticamente, caso não exista.
 
-            Returns:
-                Caminho do arquivo PNG escrito, ou None caso falhe.
+        Returns:
+            Caminho do arquivo PNG escrito, ou None caso falhe.
 
-            Raises:
-                WebDriverNotStartedException: Se o WebDriver não foi iniciado.
-                OSError: Se não for possível criar o diretório ou gravar o arquivo.
+        Raises:
+            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+            OSError: Se não for possível criar o diretório ou gravar o arquivo.
         """
         self._check_webdriver_started()
         path = Path(f"{file_dir}/{datetime.now().strftime("%Y%m%d_%H%M%S.%f")}.png")
@@ -411,7 +419,9 @@ class ChromeDriver:
             logger.debug(f"{self._label}Captura de tela sava no caminho: {path}")
             return path
         else:
-            logger.error(f"{self._label}Falha ao salvar captura de tela no caminho: {path}")
+            logger.error(
+                f"{self._label}Falha ao salvar captura de tela no caminho: {path}"
+            )
             return None
 
     def enable_network_throttling(
@@ -439,7 +449,6 @@ class ChromeDriver:
     # ------------------------------------------------------------------------------------
     #                                       API Interna
     # ------------------------------------------------------------------------------------
-    
 
     def _check_webdriver_started(self) -> None:
         """Levanta WebDriverNotStartedException caso o Webdriver não tenha sido inicializado.
@@ -456,11 +465,12 @@ class ChromeDriver:
 
 class DriverLabel:
     """Label para identificação de drivers quando utilizando múltiplas instâncias. Usado apenas para logging."""
+
     def __init__(self, label: str | None = None):
         self.label = label
 
     def __repr__(self) -> str:
-        return '' if not self.label else f'({self.label}) '
+        return "" if not self.label else f"({self.label}) "
 
 
 # ------------------------------------------------------------------------------------
