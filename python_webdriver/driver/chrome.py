@@ -1,10 +1,15 @@
-from python_webdriver.driver.element import WebDriverElementLocator, WebDriverElementListLocator, WebElementWait
+from python_webdriver.driver.element import (
+    WebDriverElement,
+    WebDriverElementLocator,
+    WebDriverElementListLocator,
+)
 from python_webdriver.driver.exceptions import (
     WebDriverException,
     WebDriverNotStartedException,
     WebDriverNotInstantiatedException,
     InvalidFileExtensionException
 )
+from python_webdriver.functions import retry_on_exception
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webdriver import WebElement, WebDriver
@@ -21,8 +26,6 @@ class ChromeDriver:
     def __init__(
         self,
         driver_path:  str | Path,
-        implicit_wait_seconds: int,
-        max_retry_attempts: int,
         driver_label: str | None = None,
     ):
         """
@@ -31,16 +34,10 @@ class ChromeDriver:
         Args:
             driver_path:
                 Caminho para o executável do navegador
-            implicit_wait_seconds
-                Tempo (segundos) em que o Webdriver irá esperar implicitamente até elementos estarem acessíveis ao driver.
-            max_retry_attempts:
-                Quantidade máxima de vezes que o Webdriver retenta acessar um elemento indisponível ou inexistente.
             driver_label:
                 Label para identificar driver quando rodando mais de uma instância. Utilizado apenas em logs. Padrão é sem label.
         """
         self.driver_path = Path(driver_path)
-        self.implicit_wait_seconds = implicit_wait_seconds
-        self.max_retry_attempts: int = max_retry_attempts
         self._driver: WebDriver | None = None
         self._is_driver_started = False
         self._label = DriverLabel(driver_label)
@@ -88,7 +85,6 @@ class ChromeDriver:
                 opt.add_experimental_option("prefs", experimental_options)
             self._driver = webdriver.Chrome(opt)
             self._is_driver_started = True
-            self.implicitly_wait_for(self.implicit_wait_seconds)
         return self.get_driver()
 
     def quit_driver(self):
@@ -150,103 +146,90 @@ class ChromeDriver:
 
     def type(
         self,
-        element: WebElement,
+        element: WebDriverElement,
         text: str,
-    ) -> WebElement:
-        """Insere texto no elemento informado.
-
-        Args:
-            element: Elemento alvo da digitação.
-            text: Texto a ser inserido.
-
-        Returns:
-            O mesmo elemento recebido, após a digitação.
-
-        Raises:
-            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
-        """
+        max_retries: int = 10,
+        timeout: float = 1
+    ):
         self._check_webdriver_started()
         logger.debug(f"{self._label}Inserindo texto no elemento {element}...")
-        element.send_keys(text)
-        return element
+        def _action():
+            el = element.get_element()
+            el.send_keys(text)
+
+        retry_on_exception(
+            func=_action,
+            max_attempts=max_retries,
+            polling_seconds=timeout,
+        )
 
     def clear(
-        self, element: WebElement
-    ) -> WebElement:
-        """Limpa o conteúdo do elemento informado.
-
-        Args:
-            element: Elemento cujo conteúdo será removido.
-
-        Returns:
-            O mesmo elemento recebido, após a limpeza.
-
-        Raises:
-            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
-        """
+        self,
+        element: WebDriverElement,
+        max_retries: int = 10,
+        timeout: float = 1
+    ):
         self._check_webdriver_started()
         logger.debug(f"{self._label}Limpando o elemento {element}...")
-        element.clear()
-        return element
+        def _action():
+            el = element.get_element()
+            el.clear()
+
+        retry_on_exception(
+            func=_action,
+            max_attempts=max_retries,
+            polling_seconds=timeout,
+        )
 
     def type_and_enter(
         self,
-        element: WebElement,
+        element: WebDriverElement,
         text: str,
-    ) -> WebElement:
-        """Insere texto no elemento e pressiona Enter em seguida.
-
-        Args:
-            element: Elemento alvo da digitação.
-            text: Texto a ser inserido antes de pressionar Enter.
-
-        Returns:
-            O mesmo elemento recebido, após a digitação e o envio de Enter.
-
-        Raises:
-            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
-        """
-        element = self.type(element, text)
+        max_retries: int = 10,
+        timeout: float = 1
+    ):
+        self.type(element, text)
         logger.debug(f"{self._label}Apertando botão Enter...")
-        element.send_keys(Keys.ENTER)
-        return element
+        def _action():
+            element.get_element().send_keys(Keys.ENTER)
+        retry_on_exception(
+            func=_action,
+            max_attempts=max_retries,
+            polling_seconds=timeout,
+        )
 
     def click(
         self,
-        element: WebElement,
-    ) -> WebElement:
-        """Clica no elemento informado.
-
-        Args:
-            element: Elemento a ser clicado.
-
-        Returns:
-            O mesmo elemento recebido, após o clique.
-
-        Raises:
-            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
-        """
+        element: WebDriverElement,
+        max_retries: int = 10,
+        timeout: float = 1
+    ):
         self._check_webdriver_started()
         logger.debug(f"{self._label}Clicando no elemento {element}...")
-        element.click()
-        return element
+        def _action():
+            el: WebElement = element.get_element()
+            el.click()
+        retry_on_exception(
+            func=_action,
+            max_attempts=max_retries,
+            polling_seconds=timeout,
+        )
 
-    def scroll_element_into_view(self, element: WebElement) -> WebElement:
-        """Rola a página até que o elemento fique visível na viewport.
-
-        Args:
-            element: Elemento que deve ser exibido na tela.
-
-        Returns:
-            O mesmo elemento recebido, após a rolagem.
-
-        Raises:
-            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
-        """
+    def scroll_element_into_view(
+        self,
+        element: WebDriverElement,
+        max_retries: int = 10,
+        timeout: float = 1
+    ):
         self._check_webdriver_started()
         logger.debug(f"{self._label}Rolando até o elemento: {element}")
-        self.get_driver().execute_script("arguments[0].scrollIntoView();", element)
-        return element
+        def _action():
+            self.get_driver().execute_script("arguments[0].scrollIntoView();", element.get_element())
+        retry_on_exception(
+            func=_action,
+            max_attempts=max_retries,
+            polling_seconds=timeout,
+        )
 
     def implicitly_wait_for(self, seconds: float = 30) -> None:
         """Configura o tempo de espera implícita do WebDriver.
@@ -263,22 +246,6 @@ class ChromeDriver:
             f"{self._label}Configurando driver para aguardar implicitamente por {seconds} segundo(s)..."
         )
         self.get_driver().implicitly_wait(seconds)
-
-    def wait_for(self, element: WebElement) -> WebElementWait:
-        """Retorna um aguardador de condições explícitas para o elemento.
-
-        Args:
-            element: Elemento sobre o qual as condições de espera serão
-                avaliadas.
-
-        Returns:
-            Instância de WebElementWait configurada para o elemento informado.
-
-        Raises:
-            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
-        """
-        self._check_webdriver_started()
-        return WebElementWait(self.get_driver(), element)
 
     def explicit_wait(self, seconds: float):
         """Aguarda um intervalo fixo de tempo antes de continuar a execução.
