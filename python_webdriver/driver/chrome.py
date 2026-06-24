@@ -213,22 +213,6 @@ class ChromeDriver:
             polling_seconds=timeout,
         )
 
-    def implicitly_wait_for(self, seconds: float = 30) -> None:
-        """Configura o tempo de espera implícita do WebDriver.
-
-        Args:
-            seconds: Tempo máximo, em segundos, que o driver aguardará por
-                elementos antes de falhar. Padrão é 30 segundos.
-
-        Raises:
-            WebDriverNotInstantiatedException: Se o ChromeDriver ainda não foi
-                instanciado.
-        """
-        logger.debug(
-            f"{self._label}Configurando driver para aguardar implicitamente por {seconds} segundo(s)..."
-        )
-        self.get_driver().implicitly_wait(seconds)
-
     def explicit_wait(self, seconds: float):
         """Aguarda um intervalo fixo de tempo antes de continuar a execução.
 
