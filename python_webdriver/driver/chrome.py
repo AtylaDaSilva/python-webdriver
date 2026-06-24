@@ -134,6 +134,17 @@ class ChromeDriver:
         max_retries: int = 10,
         timeout: float = 1
     ):
+        """Insere um texto em um elemento da página.
+
+        Args:
+            element: Elemento no qual o texto será inserido.
+            text: Texto a ser digitado no elemento.
+            max_retries: Número máximo de tentativas em caso de falha. Padrão é 10.
+            timeout: Intervalo em segundos entre cada tentativa. Padrão é 1.
+
+        Raises:
+            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+        """
         self._check_webdriver_started()
         logger.debug(f"{self._label}Inserindo texto no elemento {element}...")
         def _action():
@@ -152,6 +163,16 @@ class ChromeDriver:
         max_retries: int = 10,
         timeout: float = 1
     ):
+        """Limpa o texto de um elemento da página.
+
+        Args:
+            element: Elemento cujo conteúdo será limpo.
+            max_retries: Número máximo de tentativas em caso de falha. Padrão é 10.
+            timeout: Intervalo em segundos entre cada tentativa. Padrão é 1.
+
+        Raises:
+            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+        """
         self._check_webdriver_started()
         logger.debug(f"{self._label}Limpando o elemento {element}...")
         def _action():
@@ -171,6 +192,17 @@ class ChromeDriver:
         max_retries: int = 10,
         timeout: float = 1
     ):
+        """Insere um texto em um elemento da página e pressiona a tecla Enter.
+
+        Args:
+            element: Elemento no qual o texto será inserido.
+            text: Texto a ser digitado no elemento.
+            max_retries: Número máximo de tentativas em caso de falha. Padrão é 10.
+            timeout: Intervalo em segundos entre cada tentativa. Padrão é 1.
+
+        Raises:
+            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+        """
         self.type(element, text)
         logger.debug(f"{self._label}Apertando botão Enter...")
         def _action():
@@ -187,6 +219,16 @@ class ChromeDriver:
         max_retries: int = 10,
         timeout: float = 1
     ):
+        """Clica em um elemento da página.
+
+        Args:
+            element: Elemento a ser clicado.
+            max_retries: Número máximo de tentativas em caso de falha. Padrão é 10.
+            timeout: Intervalo em segundos entre cada tentativa. Padrão é 1.
+
+        Raises:
+            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+        """
         self._check_webdriver_started()
         logger.debug(f"{self._label}Clicando no elemento {element}...")
         def _action():
@@ -204,6 +246,16 @@ class ChromeDriver:
         max_retries: int = 10,
         timeout: float = 1
     ):
+        """Rola a página até que o elemento especificado fique visível na tela.
+
+            Args:
+                element: Elemento até o qual a página será rolada.
+                max_retries: Número máximo de tentativas em caso de falha. Padrão é 10.
+                timeout: Intervalo em segundos entre cada tentativa. Padrão é 1.
+
+            Raises:
+                WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+        """
         self._check_webdriver_started()
         logger.debug(f"{self._label}Rolando até o elemento: {element}")
         def _action():
@@ -222,6 +274,18 @@ class ChromeDriver:
         max_retries: int = 10,
         timeout: float = 1
     ):
+        """Arrasta um elemento da página até a posição especificada pelos offsets X e Y.
+
+            Args:
+                element: Elemento a ser arrastado.
+                x_offset: Deslocamento horizontal em pixels em relação à posição atual do elemento.
+                y_offset: Deslocamento vertical em pixels em relação à posição atual do elemento.
+                max_retries: Número máximo de tentativas em caso de falha. Padrão é 10.
+                timeout: Intervalo em segundos entre cada tentativa. Padrão é 1.
+
+            Raises:
+                WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+        """
         self._check_webdriver_started()
         logger.debug(
             f"{self._label}Arrastando elemento {element} até os offsets X: {x_offset}, Y: {y_offset}..."
