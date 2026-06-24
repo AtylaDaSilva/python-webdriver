@@ -14,6 +14,9 @@ class WebDriverElement:
     def get_element(self) -> WebElement:
         return self._driver.find_element(by=self.locator[0], value=self.locator[1])
 
+    def get_all_elements(self) -> list[WebElement]:
+        return self._driver.find_elements(by=self.locator[0], value=self.locator[1])
+
 
 class WebDriverElementLocator:
     def __init__(self, driver: WebDriver, context: WebElement | None = None):
@@ -25,11 +28,10 @@ class WebDriverElementLocator:
             locator=(By.XPATH, f'//*[@{attr_name}="{attr_value}"]'), driver=self._driver
         )
 
-    def by_tag(self, tag_name: str) -> WebElement:
-        raise NotImplementedError
-        if self.context:
-            return self.context.find_element(by=By.XPATH, value=f'//{tag_name}')
-        return self.driver.find_element(by=By.XPATH, value=f'//{tag_name}')
+    def by_tag(self, tag_name: str) -> WebDriverElement:
+        return WebDriverElement(
+            locator=(By.TAG_NAME, tag_name), driver=self._driver
+        )
 
     def by_id(self, element_id: str) -> WebDriverElement:
         return WebDriverElement(
@@ -37,27 +39,26 @@ class WebDriverElementLocator:
         )
 
     def by_class(self, class_name: str):
-        raise NotImplementedError
-        if self.context:
-            return self.context.find_element(by=By.CLASS_NAME, value=class_name)
-        return self.by_attribute(attr_name="class", attr_value=class_name)
+        return WebDriverElement(
+            locator=(By.CLASS_NAME, class_name), driver=self._driver
+        )
+
+    def by_name(self, name: str):
+        return WebDriverElement(
+            locator=(By.NAME, name), driver=self._driver
+        )
 
     def by_xpath(self, xpath: str) -> WebDriverElement:
         return WebDriverElement(
             locator=(By.XPATH, xpath), driver=self._driver
         )
 
+    def by_link_text(self, text: str) -> WebDriverElement:
+        return WebDriverElement(
+            locator=(By.LINK_TEXT, text), driver=self._driver
+        )
 
-class WebDriverElementListLocator(WebDriverElementLocator):
-
-    def by_attribute(self, attr_name: str, attr_value: str) -> list[WebElement]:
-        raise NotImplementedError
-        if self.context:
-            return self.context.find_elements(by=By.XPATH, value=f'//*[@{attr_name}="{attr_value}"]')
-        return self.driver.find_elements(by=By.XPATH, value=f'//*[@{attr_name}="{attr_value}"]')
-
-    def by_tag(self, tag_name: str) -> list[WebElement]:
-        raise NotImplementedError
-        if self.context:
-            return self.context.find_elements(by=By.XPATH, value=f'//{tag_name}')
-        return self.driver.find_elements(by=By.XPATH, value=f'//{tag_name}')
+    def by_css_selector(self, selector: str) -> WebDriverElement:
+        return WebDriverElement(
+            locator=(By.CSS_SELECTOR, selector), driver=self._driver
+        )
