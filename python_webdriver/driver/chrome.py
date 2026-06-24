@@ -110,7 +110,7 @@ class ChromeDriver:
         self.get_driver().get(url)
 
     def find_element(
-        self, context: WebElement | None = None
+        self, context: WebDriverElement | None = None
     ) -> WebDriverElementLocator:
         """Retorna um localizador para buscar um único elemento na página.
 

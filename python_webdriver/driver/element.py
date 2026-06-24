@@ -10,13 +10,16 @@ class WebDriverElement:
         locator: Tupla contendo o tipo de seletor e o valor utilizado para localizar o elemento.
     """
 
-    def __init__(self, locator: tuple[ByType, str], driver: WebDriver):
+    def __init__(self, locator: tuple[ByType, str], driver: WebDriver, context: WebDriverElement | None = None):
         """
         Args:
             locator: Tupla contendo o tipo de seletor (ex: By.ID) e o valor do seletor.
             driver: Instância do WebDriver utilizada para localizar o elemento.
+            context: Contexto de busca para localizar o elemento.
+            Se passado, todas as buscas serão feitas em cima deste elemento.
         """
         self.locator = locator
+        self.context = context
         self._driver = driver
 
     def __repr__(self):
@@ -28,6 +31,8 @@ class WebDriverElement:
         Returns:
             Instância de WebElement correspondente ao localizador.
         """
+        if self.context:
+            return self.context.get_element().find_element(by=self.locator[0], value=self.locator[1])
         return self._driver.find_element(by=self.locator[0], value=self.locator[1])
 
     def get_all_elements(self) -> list[WebElement]:
@@ -36,6 +41,8 @@ class WebDriverElement:
         Returns:
             Lista de WebElements correspondentes ao localizador.
         """
+        if self.context:
+            return self.context.get_element().find_elements(by=self.locator[0], value=self.locator[1])
         return self._driver.find_elements(by=self.locator[0], value=self.locator[1])
 
     def get_coordinates(self) -> WebDriverElementCoordinates:
@@ -54,7 +61,7 @@ class WebDriverElementLocator:
         context: Elemento pai opcional utilizado para restringir a busca.
     """
 
-    def __init__(self, driver: WebDriver, context: WebElement | None = None):
+    def __init__(self, driver: WebDriver, context: WebDriverElement | None = None):
         """
         Args:
             driver: Instância do WebDriver utilizada para localizar elementos.
@@ -64,7 +71,7 @@ class WebDriverElementLocator:
         self._driver = driver
         self.context = context
 
-    def by_attribute(self, attr_name: str, attr_value: str) -> WebDriverElement:
+    def by_attribute(self, attr_name: str, attr_value: str, context: WebDriverElement | None = None) -> WebDriverElement:
         """Localiza um elemento pelo valor de um atributo HTML via XPath.
 
         Args:
@@ -75,10 +82,10 @@ class WebDriverElementLocator:
             Instância de WebDriverElement configurada com o localizador XPath gerado.
         """
         return WebDriverElement(
-            locator=(By.XPATH, f'//*[@{attr_name}="{attr_value}"]'), driver=self._driver
+            locator=(By.XPATH, f'//*[@{attr_name}="{attr_value}"]'), driver=self._driver, context=self.context
         )
 
-    def by_tag(self, tag_name: str) -> WebDriverElement:
+    def by_tag(self, tag_name: str, context: WebDriverElement | None = None) -> WebDriverElement:
         """Localiza um elemento pelo nome da tag HTML.
 
         Args:
@@ -87,9 +94,9 @@ class WebDriverElementLocator:
         Returns:
             Instância de WebDriverElement configurada com o localizador por tag.
         """
-        return WebDriverElement(locator=(By.TAG_NAME, tag_name), driver=self._driver)
+        return WebDriverElement(locator=(By.TAG_NAME, tag_name), driver=self._driver, context=self.context)
 
-    def by_id(self, element_id: str) -> WebDriverElement:
+    def by_id(self, element_id: str, context: WebDriverElement | None = None) -> WebDriverElement:
         """Localiza um elemento pelo atributo id.
 
         Args:
@@ -98,9 +105,9 @@ class WebDriverElementLocator:
         Returns:
             Instância de WebDriverElement configurada com o localizador por id.
         """
-        return WebDriverElement(locator=(By.ID, element_id), driver=self._driver)
+        return WebDriverElement(locator=(By.ID, element_id), driver=self._driver, context=self.context)
 
-    def by_class(self, class_name: str):
+    def by_class(self, class_name: str, context: WebDriverElement | None = None):
         """Localiza um elemento pelo nome da classe CSS.
 
         Args:
@@ -110,10 +117,10 @@ class WebDriverElementLocator:
             Instância de WebDriverElement configurada com o localizador por classe.
         """
         return WebDriverElement(
-            locator=(By.CLASS_NAME, class_name), driver=self._driver
+            locator=(By.CLASS_NAME, class_name), driver=self._driver, context=self.context
         )
 
-    def by_name(self, name: str):
+    def by_name(self, name: str, context: WebDriverElement | None = None):
         """Localiza um elemento pelo atributo name.
 
         Args:
@@ -122,9 +129,9 @@ class WebDriverElementLocator:
         Returns:
             Instância de WebDriverElement configurada com o localizador por name.
         """
-        return WebDriverElement(locator=(By.NAME, name), driver=self._driver)
+        return WebDriverElement(locator=(By.NAME, name), driver=self._driver, context=self.context)
 
-    def by_xpath(self, xpath: str) -> WebDriverElement:
+    def by_xpath(self, xpath: str, context: WebDriverElement | None = None) -> WebDriverElement:
         """Localiza um elemento por uma expressão XPath.
 
         Args:
@@ -133,9 +140,9 @@ class WebDriverElementLocator:
         Returns:
             Instância de WebDriverElement configurada com o localizador XPath.
         """
-        return WebDriverElement(locator=(By.XPATH, xpath), driver=self._driver)
+        return WebDriverElement(locator=(By.XPATH, xpath), driver=self._driver, context=self.context)
 
-    def by_link_text(self, text: str) -> WebDriverElement:
+    def by_link_text(self, text: str, context: WebDriverElement | None = None) -> WebDriverElement:
         """Localiza um elemento de link pelo seu texto visível.
 
         Args:
@@ -144,9 +151,9 @@ class WebDriverElementLocator:
         Returns:
             Instância de WebDriverElement configurada com o localizador por texto de link.
         """
-        return WebDriverElement(locator=(By.LINK_TEXT, text), driver=self._driver)
+        return WebDriverElement(locator=(By.LINK_TEXT, text), driver=self._driver, context=self.context)
 
-    def by_css_selector(self, selector: str) -> WebDriverElement:
+    def by_css_selector(self, selector: str, context: WebDriverElement | None = None) -> WebDriverElement:
         """Localiza um elemento por um seletor CSS.
 
         Args:
@@ -156,7 +163,7 @@ class WebDriverElementLocator:
             Instância de WebDriverElement configurada com o localizador por seletor CSS.
         """
         return WebDriverElement(
-            locator=(By.CSS_SELECTOR, selector), driver=self._driver
+            locator=(By.CSS_SELECTOR, selector), driver=self._driver, context=self.context
         )
 
 
