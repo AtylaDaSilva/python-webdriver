@@ -17,6 +17,11 @@ class WebDriverElement:
     def get_all_elements(self) -> list[WebElement]:
         return self._driver.find_elements(by=self.locator[0], value=self.locator[1])
 
+    def get_coordinates(self) -> WebDriverElementCoordinates:
+        return WebDriverElementCoordinates(
+            coords=self.get_element().location
+        )
+
 
 class WebDriverElementLocator:
     def __init__(self, driver: WebDriver, context: WebElement | None = None):
@@ -62,3 +67,8 @@ class WebDriverElementLocator:
         return WebDriverElement(
             locator=(By.CSS_SELECTOR, selector), driver=self._driver
         )
+
+
+class WebDriverElementCoordinates:
+    def __init__(self, coords: dict[str, int]):
+        self.x, self.y = coords.values()

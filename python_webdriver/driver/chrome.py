@@ -12,6 +12,7 @@ from python_webdriver.functions import retry_on_exception
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webdriver import WebElement, WebDriver
+from selenium.webdriver import ActionChains
 from loguru import logger
 import base64
 from pathlib import Path
@@ -207,6 +208,30 @@ class ChromeDriver:
         logger.debug(f"{self._label}Rolando até o elemento: {element}")
         def _action():
             self.get_driver().execute_script("arguments[0].scrollIntoView();", element.get_element())
+        retry_on_exception(
+            func=_action,
+            max_attempts=max_retries,
+            polling_seconds=timeout,
+        )
+
+    def drag_and_drop_by_offset(
+        self,
+        element: WebDriverElement,
+        x_offset: int,
+        y_offset: int,
+        max_retries: int = 10,
+        timeout: float = 1
+    ):
+        self._check_webdriver_started()
+        logger.debug(
+            f"{self._label}Arrastando elemento {element} até os offsets X: {x_offset}, Y: {y_offset}..."
+        )
+        def _action():
+            el: WebElement = element.get_element()
+            action_chains = ActionChains(self.get_driver())
+            (action_chains
+             .drag_and_drop_by_offset(el, xoffset=x_offset, yoffset=y_offset)
+             .perform())
         retry_on_exception(
             func=_action,
             max_attempts=max_retries,
