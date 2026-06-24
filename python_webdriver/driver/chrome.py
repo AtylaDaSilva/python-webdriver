@@ -1,7 +1,6 @@
 from python_webdriver.driver.element import (
     WebDriverElement,
     WebDriverElementLocator,
-    WebDriverElementListLocator,
 )
 from python_webdriver.driver.exceptions import (
     WebDriverException,
@@ -126,23 +125,6 @@ class ChromeDriver:
                 instanciado.
         """
         return WebDriverElementLocator(self.get_driver(), context)
-
-    def find_elements(self, context: WebElement | None = None) -> WebDriverElementListLocator:
-        """Retorna um localizador para buscar múltiplos elementos na página.
-
-        Args:
-            context: Elemento pai opcional para restringir a busca. Se None,
-                a busca ocorre em toda a página.
-
-        Returns:
-            Instância de WebDriverElementListLocator configurada com o driver
-            atual.
-
-        Raises:
-            WebDriverNotInstantiatedException: Se o ChromeDriver ainda não foi
-                instanciado.
-        """
-        return WebDriverElementListLocator(self.get_driver(), context)
 
     def type(
         self,
