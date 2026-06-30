@@ -318,6 +318,20 @@ class ChromeDriver:
         )
         sleep(seconds)
 
+    def hide_elements(self, elements: tuple[str, ...]):
+        """Oculta, de forma síncrona, elementos da página atual.
+
+            Utiliza JavaScript para alterar o estilo dos elementos, definindo `display: none`.
+            O método utilizado é `document.querySelectorAll`, então será escondido **todos** os elementos que correspondam ao seletor CSS informado.
+
+            Args:
+                elements: Tupla com seletores CSS dos elementos a serem ocultados.
+        """
+        for el in elements:
+            self.get_driver().execute_script(
+                f"document.querySelectorAll('{el}').forEach((el) => el.style.display = 'none')"
+            )
+
     def page_to_pdf(
         self,
         file_path: str | Path,
