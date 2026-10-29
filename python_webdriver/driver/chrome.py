@@ -25,7 +25,9 @@ from time import sleep
 class ChromeDriver:
     def __init__(
         self,
-        driver_path: str | Path,
+        driver_path: (
+            str | Path
+        ) = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
         driver_label: str | None = None,
     ):
         """
