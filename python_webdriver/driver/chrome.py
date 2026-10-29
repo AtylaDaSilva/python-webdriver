@@ -40,6 +40,7 @@ class ChromeDriver:
                 Label para identificar driver quando rodando mais de uma instância. Utilizado apenas em logs. Padrão é sem label.
         """
         self.driver_path = Path(driver_path)
+        self.options = ChromeDriverOptions()
         self._driver: WebDriver | None = None
         self._is_running = False
         self._label = DriverLabel(driver_label)
@@ -60,30 +61,17 @@ class ChromeDriver:
             "ChromeDriver ainda não foi instanciado."
         )
 
-    def start(
-        self,
-        options: tuple[str, ...] = tuple(),
-        experimental_options: dict[str, Any] | None = None,
-    ) -> WebDriver:
+    def start(self) -> WebDriver:
         """
         Inicia o navegador localizado em **self.driver_path** e retorna uma instância de WebDriver.
-        Args:
-            options:
-                Tupla de opções
-            experimental_options:
-                Dicionário com opções experimentais a serem passadas para o Chromium.
+
         Returns:
             Instância de WebDriver.
         """
         if not self.is_running():
             logger.debug(f"{self._label}Iniciando ChromeDriver...")
-            opt = webdriver.ChromeOptions()
-            opt.binary_location = str(self.driver_path)
-            for o in options:
-                opt.add_argument(o)
-            if experimental_options:
-                opt.add_experimental_option("prefs", experimental_options)
-            self._driver = webdriver.Chrome(opt)
+            self.options.set_binary_location(self.driver_path)
+            self._driver = webdriver.Chrome(self.options.get_options())
             self._is_running = True
         return self.get_driver()
 
@@ -97,6 +85,9 @@ class ChromeDriver:
             logger.debug(f"{self._label}Fechando ChromeDriver...")
             self.get_driver().quit()
             self._is_running = False
+
+    def get_options(self) -> webdriver.ChromeOptions:
+        return self.options.get_options()
 
     def goto(self, url: str):
         """Navega para a URL informada.
@@ -487,6 +478,75 @@ class DriverLabel:
 
     def __repr__(self) -> str:
         return "" if not self.label else f"({self.label}) "
+
+
+class ChromeDriverOptions:
+    """Interface for easily setting options with webdriver.ChromeOptions"""
+
+    def __init__(self) -> None:
+        self.options = webdriver.ChromeOptions()
+
+    def get_options(self) -> webdriver.ChromeOptions:
+        return self.options
+
+    def set_option(self, arg: str) -> None:
+        """Sets an arbitrary Chromium option.
+        For a full list of supported arguments, @see https://peter.sh/experiments/chromium-command-line-switches/
+
+        Args:
+            arg (str): Name of the argument. Example: --start-maximized
+        """
+        logger.debug(f"Setting Chrome option '{arg}'...")
+        self.options.add_argument(arg)
+
+    def set_experimental_option(
+        self, name: str, value: str | int | dict[str, Any] | list[str]
+    ) -> None:
+        """Sets an arbitrary Chromium experimental option.
+
+        Args:
+            name (str): Name of the option. Example: "prefs"
+            value (str | int | dict[str, Any] | list[str]): Option value
+        """
+        logger.debug(
+            f"Setting experimental Chrome option '{name}' with the value(s) '{value}'"
+        )
+        self.options.add_experimental_option(name, value)
+
+    def set_binary_location(self, path: str | Path) -> None:
+        """Sets path to Chrome binary.
+
+        Args:
+            path (str | Path): Absolute path to Chrome executable.
+        """
+        p = Path(path) if isinstance(path, str) else path
+        self.options.binary_location = str(p)
+
+    def set_start_maximized(self) -> None:
+        """Starts browser window maximized."""
+        self.set_option("--start-maximized")
+
+    def set_headless_mode(self) -> None:
+        """Starts browser in headless mode, i.e., without a UI or display server dependencies."""
+        self.set_option("--headless")
+
+    def set_download_path(self, path: str | Path) -> None:
+        """Sets the file download path to *path* and disables the "Save as" dialog.
+
+        Args:
+            path (str | Path): Absolute path to file download location. The directory will be created if it does not exist.
+        """
+        p = Path(path) if isinstance(path, str) else path
+        p.mkdir(exist_ok=True)
+        self.set_experimental_option(
+            "prefs",
+            {
+                "download.default_directory": str(p),
+                "download.prompt_for_download": False,  # no "Save as" dialog
+                "download.directory_upgrade": True,
+                "safebrowsing.enabled": True,  # avoids blocks on some file types
+            },
+        )
 
 
 # ------------------------------------------------------------------------------------
