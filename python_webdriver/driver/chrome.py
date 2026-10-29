@@ -41,16 +41,16 @@ class ChromeDriver:
         """
         self.driver_path = Path(driver_path)
         self._driver: WebDriver | None = None
-        self._is_driver_started = False
+        self._is_running = False
         self._label = DriverLabel(driver_label)
 
     # ------------------------------------------------------------------------------------
     #                                       API Pública
     # ------------------------------------------------------------------------------------
 
-    def is_driver_started(self) -> bool:
+    def is_running(self) -> bool:
         """Retorna True se o Webdriver tiver sido inicializado, False caso contrário."""
-        return self._is_driver_started
+        return self._is_running
 
     def get_driver(self) -> WebDriver:
         """Retorna instância do WebDriver"""
@@ -75,7 +75,7 @@ class ChromeDriver:
         Returns:
             Instância de WebDriver.
         """
-        if not self.is_driver_started():
+        if not self.is_running():
             logger.debug(f"{self._label}Iniciando ChromeDriver...")
             opt = webdriver.ChromeOptions()
             opt.binary_location = str(self.driver_path)
@@ -84,7 +84,7 @@ class ChromeDriver:
             if experimental_options:
                 opt.add_experimental_option("prefs", experimental_options)
             self._driver = webdriver.Chrome(opt)
-            self._is_driver_started = True
+            self._is_running = True
         return self.get_driver()
 
     def quit(self):
@@ -93,10 +93,10 @@ class ChromeDriver:
         Raises:
             WebDriverNotInstantiatedException: Se o ChromeDriver nunca foi instanciado.
         """
-        if self.is_driver_started():
+        if self.is_running():
             logger.debug(f"{self._label}Fechando ChromeDriver...")
             self.get_driver().quit()
-            self._is_driver_started = False
+            self._is_running = False
 
     def goto(self, url: str):
         """Navega para a URL informada.
@@ -470,7 +470,7 @@ class ChromeDriver:
         """Levanta WebDriverNotStartedException caso o Webdriver não tenha sido inicializado.
         :return:
         """
-        if self.get_driver() is None or not self.is_driver_started():
+        if self.get_driver() is None or not self.is_running():
             raise WebDriverNotStartedException("ChromeDriver ainda não foi iniciado.")
 
 
