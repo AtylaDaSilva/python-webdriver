@@ -58,7 +58,7 @@ class ChromeDriver:
             "ChromeDriver ainda não foi instanciado."
         )
 
-    def start_driver(
+    def start(
         self,
         options: tuple[str, ...] = tuple(),
         experimental_options: dict[str, Any] | None = None,
@@ -85,7 +85,7 @@ class ChromeDriver:
             self._is_driver_started = True
         return self.get_driver()
 
-    def quit_driver(self):
+    def quit(self):
         """Encerra o navegador e marca o driver como não iniciado.
 
         Raises:
@@ -321,11 +321,11 @@ class ChromeDriver:
     def hide_elements(self, elements: tuple[str, ...]):
         """Oculta, de forma síncrona, elementos da página atual.
 
-            Utiliza JavaScript para alterar o estilo dos elementos, definindo `display: none`.
-            O método utilizado é `document.querySelectorAll`, então será escondido **todos** os elementos que correspondam ao seletor CSS informado.
+        Utiliza JavaScript para alterar o estilo dos elementos, definindo `display: none`.
+        O método utilizado é `document.querySelectorAll`, então será escondido **todos** os elementos que correspondam ao seletor CSS informado.
 
-            Args:
-                elements: Tupla com seletores CSS dos elementos a serem ocultados.
+        Args:
+            elements: Tupla com seletores CSS dos elementos a serem ocultados.
         """
         for el in elements:
             self.get_driver().execute_script(
