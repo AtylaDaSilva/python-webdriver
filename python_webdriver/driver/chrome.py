@@ -25,25 +25,25 @@ from time import sleep
 class ChromeDriver:
     def __init__(
         self,
-        driver_path: (
+        binary_path: (
             str | Path
         ) = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-        driver_label: str | None = None,
+        label: str | None = None,
     ):
         """
         Classe Wrapper que envelopa a classe WebDriver do selenium para automações utilizando o navegador Google Chrome
 
         Args:
-            driver_path:
+            binary_path:
                 Caminho para o executável do navegador
-            driver_label:
+            label:
                 Label para identificar driver quando rodando mais de uma instância. Utilizado apenas em logs. Padrão é sem label.
         """
-        self.driver_path = Path(driver_path)
+        self.driver_path = Path(binary_path)
         self.options = ChromeDriverOptions()
         self._driver: WebDriver | None = None
         self._is_running = False
-        self._label = DriverLabel(driver_label)
+        self._label = DriverLabel(label)
 
     # ------------------------------------------------------------------------------------
     #                                       API Pública
