@@ -31,13 +31,14 @@ class ChromeDriver:
         label: str | None = None,
     ):
         """
-        Classe Wrapper que envelopa a classe WebDriver do selenium para automações utilizando o navegador Google Chrome
+        Thin wrapper class that provides some useful methods for creating automations using Selenium and Google Chrome.
+        Other Chromium-based browsers may work but are not officially supported.
 
         Args:
             binary_path:
-                Caminho para o executável do navegador
+                Path to Google Chrome executable file (.exe). If not provided, the default installation directory of Chrome will be used.
             label:
-                Label para identificar driver quando rodando mais de uma instância. Utilizado apenas em logs. Padrão é sem label.
+                Driver label used only for logging. Useful when working with multiple drivers.
         """
         self.driver_path = Path(binary_path)
         self.options = ChromeDriverOptions()
@@ -46,24 +47,26 @@ class ChromeDriver:
         self._label = DriverLabel(label)
 
     # ------------------------------------------------------------------------------------
-    #                                       API Pública
+    #                                       Public API
     # ------------------------------------------------------------------------------------
 
     def is_running(self) -> bool:
-        """Retorna True se o Webdriver tiver sido inicializado, False caso contrário."""
+        """Returns True if the method *ChromeDriver::start* has been called, False otherwise."""
         return self._is_running
 
     def get_driver(self) -> WebDriver:
-        """Retorna instância do WebDriver"""
+        """Returns instance of WebDriver. Useful for invoking Selenium methods directly.
+        For the official reference, @see https://www.selenium.dev/documentation"""
         if self._driver:
             return self._driver
         raise WebDriverNotInstantiatedException(
-            "ChromeDriver ainda não foi instanciado."
+            "ChromeDriver has not been instantiated yet."
         )
 
     def start(self) -> WebDriver:
         """
-        Inicia o navegador localizado em **self.driver_path** e retorna uma instância de WebDriver.
+        Launches the browser located at **self.driver_path** and returns an instance of Selenium's WebDriver class.
+        Consecutive calls of *ChromeDriver::start* only returns the existing instance of the WebDriver class until *ChromeDriver::quit* has been invoked.
 
         Returns:
             Instância de WebDriver.
@@ -76,10 +79,10 @@ class ChromeDriver:
         return self.get_driver()
 
     def quit(self):
-        """Encerra o navegador e marca o driver como não iniciado.
+        """Quits the browser along with any associated tabs
 
         Raises:
-            WebDriverNotInstantiatedException: Se o ChromeDriver nunca foi instanciado.
+            WebDriverNotInstantiatedException: If ChromeDriver was never instantiated.
         """
         if self.is_running():
             logger.debug(f"{self._label}Fechando ChromeDriver...")
@@ -90,13 +93,13 @@ class ChromeDriver:
         return self.options.get_options()
 
     def goto(self, url: str):
-        """Navega para a URL informada.
+        """Navigates the browser to *url*
 
         Args:
-            url: Endereço da página a ser carregada.
+            url: The URL address.
 
         Raises:
-            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+            WebDriverNotStartedException: If ChromeDriver::start was never invoked.
         """
         self._check_webdriver_started()
         logger.debug(f"{self._label}Navegando para {url}...")
@@ -105,18 +108,16 @@ class ChromeDriver:
     def find_element(
         self, context: WebDriverElement | None = None
     ) -> WebDriverElementLocator:
-        """Retorna um localizador para buscar um único elemento na página.
+        """Returns an element locator with several useful methods for finding elements in the current page.
 
         Args:
-            context: Elemento pai opcional para restringir a busca. Se None,
-                a busca ocorre em toda a página.
+            context: Optional. An instance of WebDriverElement. If provided, the locator will look for elements only within the context, i.e. children, of this element instead of the whole web page.
 
         Returns:
-            Instância de WebDriverElementLocator configurada com o driver atual.
+            Instância de WebDriverElementLocator A locator class instance.
 
         Raises:
-            WebDriverNotInstantiatedException: Se o ChromeDriver ainda não foi
-                instanciado.
+            WebDriverNotInstantiatedException: If ChromeDriver was never instantiated.
         """
         return WebDriverElementLocator(self.get_driver(), context)
 
@@ -127,16 +128,19 @@ class ChromeDriver:
         max_retries: int = 10,
         timeout: float = 1,
     ):
-        """Insere um texto em um elemento da página.
+        """Tries to type *text* into *element*.
+
+        If for whatever reason an exception is raised during the process, retries up to *max_retries* times with a wait period of *timeout* seconds between retries.
+        If the retries exceed *max_retries*, the exception will be re-raised.
 
         Args:
-            element: Elemento no qual o texto será inserido.
-            text: Texto a ser digitado no elemento.
-            max_retries: Número máximo de tentativas em caso de falha. Padrão é 10.
-            timeout: Intervalo em segundos entre cada tentativa. Padrão é 1.
+            element: Must be a tybeable element, else Selenium will raise ElementNotInteractableException (or equivalent).
+            text: The text to type.
+            max_retries: Maximum number of retries before re-raising the exception. Defaults to 10.
+            timeout: Time interval (in seconds) between each retry. Defaults to 1.
 
         Raises:
-            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+            WebDriverNotStartedException: If *ChromeDriver::start* was never invoked.
         """
         self._check_webdriver_started()
         logger.debug(f"{self._label}Inserindo texto no elemento {element}...")
@@ -154,15 +158,18 @@ class ChromeDriver:
     def clear(
         self, element: WebDriverElement, max_retries: int = 10, timeout: float = 1
     ):
-        """Limpa o texto de um elemento da página.
+        """Tries to clear any text from *element*.
+
+        If for whatever reason an exception is raised during the process, retries up to *max_retries* times with a wait period of *timeout* seconds between retries.
+        If the retries exceed *max_retries*, the exception will be re-raised.
 
         Args:
-            element: Elemento cujo conteúdo será limpo.
-            max_retries: Número máximo de tentativas em caso de falha. Padrão é 10.
-            timeout: Intervalo em segundos entre cada tentativa. Padrão é 1.
+            element: Element to clear of text.
+            max_retries: Maximum number of retries before re-raising the exception. Defaults to 10.
+            timeout: Time interval (in seconds) between each retry. Defaults to 1.
 
         Raises:
-            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+            WebDriverNotStartedException: If *ChromeDriver::start* was never invoked.
         """
         self._check_webdriver_started()
         logger.debug(f"{self._label}Limpando o elemento {element}...")
@@ -184,16 +191,16 @@ class ChromeDriver:
         max_retries: int = 10,
         timeout: float = 1,
     ):
-        """Insere um texto em um elemento da página e pressiona a tecla Enter.
+        """Same as *ChromeDriver::type* but also presses the "Enter" key after the text is inserted.
 
         Args:
-            element: Elemento no qual o texto será inserido.
-            text: Texto a ser digitado no elemento.
-            max_retries: Número máximo de tentativas em caso de falha. Padrão é 10.
-            timeout: Intervalo em segundos entre cada tentativa. Padrão é 1.
+            element: Must be a tybeable element, else Selenium will raise ElementNotInteractableException (or equivalent).
+            text: The text to type.
+            max_retries: Maximum number of retries before re-raising the exception. Defaults to 10.
+            timeout: Time interval (in seconds) between each retry. Defaults to 1.
 
         Raises:
-            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+            WebDriverNotStartedException: If *ChromeDriver::start* was never invoked.
         """
         self.type(element, text)
         logger.debug(f"{self._label}Apertando botão Enter...")
@@ -210,15 +217,18 @@ class ChromeDriver:
     def click(
         self, element: WebDriverElement, max_retries: int = 10, timeout: float = 1
     ):
-        """Clica em um elemento da página.
+        """Tries to click *element*.
+
+        If for whatever reason an exception is raised during the process, retries up to *max_retries* times with a wait period of *timeout* seconds between retries.
+        If the retries exceed *max_retries*, the exception will be re-raised.
 
         Args:
-            element: Elemento a ser clicado.
-            max_retries: Número máximo de tentativas em caso de falha. Padrão é 10.
-            timeout: Intervalo em segundos entre cada tentativa. Padrão é 1.
+            element: The element to be clicked.
+            max_retries: Maximum number of retries before re-raising the exception. Defaults to 10.
+            timeout: Time interval (in seconds) between each retry. Defaults to 1.
 
         Raises:
-            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+            WebDriverNotStartedException: If *ChromeDriver::start* was never invoked.
         """
         self._check_webdriver_started()
         logger.debug(f"{self._label}Clicando no elemento {element}...")
@@ -236,15 +246,18 @@ class ChromeDriver:
     def scroll_element_into_view(
         self, element: WebDriverElement, max_retries: int = 10, timeout: float = 1
     ):
-        """Rola a página até que o elemento especificado fique visível na tela.
+        """Tries to scroll the web page until *element* is visible.
+
+        If for whatever reason an exception is raised during the process, retries up to *max_retries* times with a wait period of *timeout* seconds between retries.
+        If the retries exceed *max_retries*, the exception will be re-raised.
 
         Args:
-            element: Elemento até o qual a página será rolada.
-            max_retries: Número máximo de tentativas em caso de falha. Padrão é 10.
-            timeout: Intervalo em segundos entre cada tentativa. Padrão é 1.
+            element: The element to be scrolled into view.
+            max_retries: Maximum number of retries before re-raising the exception. Defaults to 10.
+            timeout: Time interval (in seconds) between each retry. Defaults to 1.
 
         Raises:
-            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+            WebDriverNotStartedException: If *ChromeDriver::start* was never invoked.
         """
         self._check_webdriver_started()
         logger.debug(f"{self._label}Rolando até o elemento: {element}")
@@ -268,17 +281,20 @@ class ChromeDriver:
         max_retries: int = 10,
         timeout: float = 1,
     ):
-        """Arrasta um elemento da página até a posição especificada pelos offsets X e Y.
+        """Tries to drag-and-drop an element by and X and Y offset.
+
+        If for whatever reason an exception is raised during the process, retries up to *max_retries* times with a wait period of *timeout* seconds between retries.
+        If the retries exceed *max_retries*, the exception will be re-raised.
 
         Args:
-            element: Elemento a ser arrastado.
-            x_offset: Deslocamento horizontal em pixels em relação à posição atual do elemento.
-            y_offset: Deslocamento vertical em pixels em relação à posição atual do elemento.
-            max_retries: Número máximo de tentativas em caso de falha. Padrão é 10.
-            timeout: Intervalo em segundos entre cada tentativa. Padrão é 1.
+            element: Must be a draggable element, else Selenium will raise an exception.
+            x_offset: Horizontal offset (in pixels) relative to the original position of *element*.
+            y_offset: Vertical offset (in pixels) relative to the original position of *element*.
+            max_retries: Maximum number of retries before re-raising the exception. Defaults to 10.
+            timeout: Time interval (in seconds) between each retry. Defaults to 1.
 
         Raises:
-            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+            WebDriverNotStartedException: If *ChromeDriver::start* was never invoked.
         """
         self._check_webdriver_started()
         logger.debug(
@@ -301,10 +317,10 @@ class ChromeDriver:
         )
 
     def explicit_wait(self, seconds: float):
-        """Aguarda um intervalo fixo de tempo antes de continuar a execução.
+        """Waits for *seconds*. Equivalent to *time.sleep* but with a layer of logging.
 
         Args:
-            seconds: Duração da pausa, em segundos.
+            seconds: Time to wait for, in seconds.
         """
         logger.debug(
             f"{self._label}Aguardando explicitamente por {seconds} segundo(s)..."
@@ -312,13 +328,13 @@ class ChromeDriver:
         sleep(seconds)
 
     def hide_elements(self, elements: tuple[str, ...]):
-        """Oculta, de forma síncrona, elementos da página atual.
+        """Synchronously hides elements in the current web page.
 
-        Utiliza JavaScript para alterar o estilo dos elementos, definindo `display: none`.
-        O método utilizado é `document.querySelectorAll`, então será escondido **todos** os elementos que correspondam ao seletor CSS informado.
+        Uses Javascript (`document.querySelectorAll`) to change the `display` attribute to *none*.
+        Note that due to the nature of running Javascript code through Selenium, this method can fail silently, so make sure the element(s) are all loaded and visible before calling *ChromeDriver::hide_elements*.
 
         Args:
-            elements: Tupla com seletores CSS dos elementos a serem ocultados.
+            elements: Tuple with the CSS selectors of the elements to hide.
         """
         for el in elements:
             self.get_driver().execute_script(
@@ -353,7 +369,7 @@ class ChromeDriver:
             Bytes do arquivo PDF escrito.
 
         Raises:
-            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+            WebDriverNotStartedException: If *ChromeDriver::start* was never invoked.
             OSError: Se não for possível criar o diretório ou gravar o arquivo.
             InvalidFileExtensionException caso a extensão do arquivo em *file_path* não for ".pdf".
             WebDriverException caso haja alguma falha na execução do comando Page.printToPDF.
@@ -415,7 +431,7 @@ class ChromeDriver:
             Caminho do arquivo PNG escrito, ou None caso falhe.
 
         Raises:
-            WebDriverNotStartedException: Se o WebDriver não foi iniciado.
+            WebDriverNotStartedException: If *ChromeDriver::start* was never invoked.
             OSError: Se não for possível criar o diretório ou gravar o arquivo.
         """
         self._check_webdriver_started()
