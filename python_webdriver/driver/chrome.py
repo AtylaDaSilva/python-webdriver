@@ -349,30 +349,29 @@ class ChromeDriver:
         options: dict[str, Any] = {},
     ) -> bytes:
         """
-        Renderiza a página atual do navegador como PDF e salva no caminho especificado em *file_path*.
+        Creates a PDF file from the current web page.
 
-        Utiliza o comando *Page.printToPDF* do Chrome DevTools Protocol (CDP) para gerar o PDF, portanto é
-        compatível apenas com o Chrome.
+        Note: This method uses Google Chrome's `Page.printToPDF` to create the PDF file and may not work on other Chromium-based browsers.
 
         Args:
-            file_path (str): Caminho completo do diretório de destino (sem o nome do arquivo).
-                O diretório é criado automaticamente, caso não exista.
+            file_path (str): Path (without the file name) to save the PDF file.
+                The directory will be created if it does not exist.
             file_name:
-                Nome do arquivo, caso queira dar um nome específico. O nome padrão é o timestamp atual (formato "%Y%m%d_%H%M%S.%f")
+                Optional. Name of the PDF file (with the `.pdf` extension). If not provided, the file name will be a timestamp of the creation time.
             hide_elements:
-                Tupla com seletores CSS dos elementos a esconder na página, para que não saiam no PDF.
+                Optional. A tuple of CSS selectors. Elements matching these selectors will be hidden from the web page before creating the PDF file.
             options:
-                Dicionário com opções passadas ao método Page.printToPDF.
-                @see https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-printToPDF para a lista de opções.
+                Dictionary with options to be passed to `Page.printToPDF`.
+                For a full list of options, @see https://chromedevtools.github.io/devtools-protocol/tot/Page/#method-printToPDF.
 
         Returns:
-            Bytes do arquivo PDF escrito.
+            Bytes object of the created file.
 
         Raises:
             WebDriverNotStartedException: If *ChromeDriver::start* was never invoked.
-            OSError: Se não for possível criar o diretório ou gravar o arquivo.
-            InvalidFileExtensionException caso a extensão do arquivo em *file_path* não for ".pdf".
-            WebDriverException caso haja alguma falha na execução do comando Page.printToPDF.
+            OSError: If an error occurred during the creation of the directory or file.
+            InvalidFileExtensionException If *file_name* does not have a *.pdf* extension.
+            WebDriverException If an error occurred during the execution of the `Page.printToPDF` command.
         """
         self._check_webdriver_started()
 
@@ -419,20 +418,20 @@ class ChromeDriver:
 
     def save_screenshot_page(self, file_dir: str) -> Path | None:
         """
-        Salva screenshot da página atual no caminho especificado em *file_dir*.
+        Takes a screenshot of the entire page and saves it to `file_dir`.
 
-        Nota: Se save_screenshot_page for invocado antes que a página carregue propriamente, a imagem sairá vazia (ou toda em branco).
+        Note: Make sure the web page is fully loaded before invoking this method, else some page elements may be missing from the screenshot.
 
         Args:
-            file_dir (str): Caminho completo do diretório de destino (sem o nome do arquivo).
-                O diretório é criado automaticamente, caso não exista.
+            file_dir (str): Directory (without the file name) to save the screenshot.
+                The directory will be created if it does not exist.
 
         Returns:
-            Caminho do arquivo PNG escrito, ou None caso falhe.
+            Path object of the screenshot (.png), or None if an *IOError* occurred during the creation of the screenshot.
 
         Raises:
             WebDriverNotStartedException: If *ChromeDriver::start* was never invoked.
-            OSError: Se não for possível criar o diretório ou gravar o arquivo.
+            OSError: If an error occurred during the creation of `file_dir`.
         """
         self._check_webdriver_started()
         path = Path(f"{file_dir}/{datetime.now().strftime("%Y%m%d_%H%M%S.%f")}.png")
@@ -451,15 +450,13 @@ class ChromeDriver:
         self,
         throttling_profile: ChromeNetworkThrottlingProfile,
     ):
-        """Habilita limitação de rede via Chrome DevTools Protocol (CDP).
+        """Enables network throttling. Useful for emulating slower internet connections.
 
         Args:
-            throttling_profile: Perfil de throttling a ser emulado (por
-                exemplo, SLOW_2G ou CELLULAR_4G).
+            throttling_profile: A network throttlign profile.
 
         Raises:
-            WebDriverNotInstantiatedException: Se o ChromeDriver ainda não foi
-                instanciado.
+            WebDriverNotInstantiatedException: If ChromeDriver was never instantiated.
         """
         logger.debug(
             f"{self._label}Habilitando limitação de rede com perfil: {throttling_profile.name}"
@@ -470,11 +467,11 @@ class ChromeDriver:
         )
 
     # ------------------------------------------------------------------------------------
-    #                                       API Interna
+    #                                       Internal API
     # ------------------------------------------------------------------------------------
 
     def _check_webdriver_started(self) -> None:
-        """Levanta WebDriverNotStartedException caso o Webdriver não tenha sido inicializado.
+        """Raises WebDriverNotStartedException if the method `ChromeDriver::start` was not invoked at least once.
         :return:
         """
         if self.get_driver() is None or not self.is_running():
@@ -482,12 +479,12 @@ class ChromeDriver:
 
 
 # ------------------------------------------------------------------------------------
-#                                          Outras Classes
+#                                          Helper Classes
 # ------------------------------------------------------------------------------------
 
 
 class DriverLabel:
-    """Label para identificação de drivers quando utilizando múltiplas instâncias. Usado apenas para logging."""
+    """Webdriver label used to differentiate multiple driver instances. Only used in logging."""
 
     def __init__(self, label: str | None = None):
         self.label = label
@@ -571,6 +568,8 @@ class ChromeDriverOptions:
 
 
 class ChromeNetworkThrottlingProfile(Enum):
+    """Network throttling profiles to be used with `ChromeDriver::enable_network_throttling`"""
+
     OFFLINE = {
         "offline": True,
         "downloadThroughput": 0,
