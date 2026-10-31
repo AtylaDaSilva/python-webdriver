@@ -72,7 +72,7 @@ class ChromeDriver:
             Instância de WebDriver.
         """
         if not self.is_running():
-            logger.debug(f"{self._label}Iniciando ChromeDriver...")
+            logger.debug(f"{self._label}Initializing ChromeDriver...")
             self.options.set_binary_location(self.driver_path)
             self._driver = webdriver.Chrome(self.options.get_options())
             self._is_running = True
@@ -85,7 +85,7 @@ class ChromeDriver:
             WebDriverNotInstantiatedException: If ChromeDriver was never instantiated.
         """
         if self.is_running():
-            logger.debug(f"{self._label}Fechando ChromeDriver...")
+            logger.debug(f"{self._label}Shutting down ChromeDriver...")
             self.get_driver().quit()
             self._is_running = False
 
@@ -102,7 +102,7 @@ class ChromeDriver:
             WebDriverNotStartedException: If ChromeDriver::start was never invoked.
         """
         self._check_webdriver_started()
-        logger.debug(f"{self._label}Navegando para {url}...")
+        logger.debug(f"{self._label}Navigating to {url}...")
         self.get_driver().get(url)
 
     def find_element(
@@ -143,7 +143,7 @@ class ChromeDriver:
             WebDriverNotStartedException: If *ChromeDriver::start* was never invoked.
         """
         self._check_webdriver_started()
-        logger.debug(f"{self._label}Inserindo texto no elemento {element}...")
+        logger.debug(f"{self._label}Typing into element {element}...")
 
         def _action():
             el = element.get_element()
@@ -172,7 +172,7 @@ class ChromeDriver:
             WebDriverNotStartedException: If *ChromeDriver::start* was never invoked.
         """
         self._check_webdriver_started()
-        logger.debug(f"{self._label}Limpando o elemento {element}...")
+        logger.debug(f"{self._label}Clearing element {element}...")
 
         def _action():
             el = element.get_element()
@@ -203,7 +203,7 @@ class ChromeDriver:
             WebDriverNotStartedException: If *ChromeDriver::start* was never invoked.
         """
         self.type(element, text)
-        logger.debug(f"{self._label}Apertando botão Enter...")
+        logger.debug(f"{self._label}Pressing Enter...")
 
         def _action():
             element.get_element().send_keys(Keys.ENTER)
@@ -231,7 +231,7 @@ class ChromeDriver:
             WebDriverNotStartedException: If *ChromeDriver::start* was never invoked.
         """
         self._check_webdriver_started()
-        logger.debug(f"{self._label}Clicando no elemento {element}...")
+        logger.debug(f"{self._label}Clicking element {element}...")
 
         def _action():
             el: WebElement = element.get_element()
@@ -260,7 +260,7 @@ class ChromeDriver:
             WebDriverNotStartedException: If *ChromeDriver::start* was never invoked.
         """
         self._check_webdriver_started()
-        logger.debug(f"{self._label}Rolando até o elemento: {element}")
+        logger.debug(f"{self._label}Scrolling to element: {element}")
 
         def _action():
             self.get_driver().execute_script(
@@ -298,7 +298,7 @@ class ChromeDriver:
         """
         self._check_webdriver_started()
         logger.debug(
-            f"{self._label}Arrastando elemento {element} até os offsets X: {x_offset}, Y: {y_offset}..."
+            f"{self._label}Dragging element {element} by offsets X: {x_offset}, Y: {y_offset}..."
         )
 
         def _action():
@@ -322,9 +322,7 @@ class ChromeDriver:
         Args:
             seconds: Time to wait for, in seconds.
         """
-        logger.debug(
-            f"{self._label}Aguardando explicitamente por {seconds} segundo(s)..."
-        )
+        logger.debug(f"{self._label}Explicitly waiting {seconds} second(s)...")
         sleep(seconds)
 
     def hide_elements(self, elements: tuple[str, ...]):
@@ -389,7 +387,7 @@ class ChromeDriver:
 
         pdf_path = p / f
 
-        logger.debug(f"{self._label}Imprimindo PDF da página no caminho: {p}")
+        logger.debug(f"{self._label}Printing PDF of the page to path: {p}")
 
         # Create directory, if it does not exist
         pdf_path.parent.mkdir(parents=True, exist_ok=True)
@@ -438,12 +436,10 @@ class ChromeDriver:
         path.parent.mkdir(parents=True, exist_ok=True)
         result = self.get_driver().save_screenshot(path)
         if result:
-            logger.debug(f"{self._label}Captura de tela sava no caminho: {path}")
+            logger.debug(f"{self._label}Screenshot saved to path: {path}")
             return path
         else:
-            logger.error(
-                f"{self._label}Falha ao salvar captura de tela no caminho: {path}"
-            )
+            logger.error(f"{self._label}Failed to save screenshot to path: {path}")
             return None
 
     def enable_network_throttling(
@@ -459,7 +455,7 @@ class ChromeDriver:
             WebDriverNotInstantiatedException: If ChromeDriver was never instantiated.
         """
         logger.debug(
-            f"{self._label}Habilitando limitação de rede com perfil: {throttling_profile.name}"
+            f"{self._label}Enabling network throttling with profile: {throttling_profile.name}"
         )
         self.get_driver().execute_cdp_cmd("Network.enable", {})
         self.get_driver().execute_cdp_cmd(
