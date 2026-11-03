@@ -150,62 +150,108 @@ finally:
 ```
 
 
-### Configure Chrome
+### Setting Chrome executable
 
-Set options before starting the browser:
+`ChromeDriver` uses the default installation directory of Google Chrome
 
 ```python
-from pathlib import Path
 from python_webdriver import ChromeDriver
 
-browser = ChromeDriver(
-    binary_path=Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
-)
-browser.options.set_headless_mode()
-browser.options.set_start_maximized()
-browser.options.set_download_path("./downloads")
+# Uses the Chrome executable located in "C:\Program Files\Google\Chrome\Application\chrome.exe"
+browser = ChromeDriver()
 browser.start()
 ```
 
-Use `browser.options.set_option("--some-chrome-flag")` or `set_experimental_option(name, value)` for additional Chrome settings.
-
-### Retry an interaction
-
-Browser interactions such as `type`, `clear`, and `click` retry when Selenium raises an exception. For example:
+You can configure `ChromeDriver` to use a different Chrome executable by passing the `binary_path` argument
 
 ```python
-search_box = browser.find_element().by_name("q")
-browser.type_and_enter(search_box, "Selenium", max_retries=5, timeout=0.5)
+# Plain string
+browser = ChromeDriver(
+    binary_path="C:\\Testing\\Chrome\\bin\chrome.exe"
+)
+browser.start()
 ```
 
-You can also use the standalone retry helper:
+```python
+from pathlib import Path
+
+# Path objects work too
+browser = ChromeDriver(
+    binary_path=Path(r"C:\Testing\Chrome\bin\chrome.exe")
+)
+browser.start()
+```
+
+### Setting Chrome options
+
+You can set various Chrome options via the options interface. Some frequently used options have their own methods.
 
 ```python
-from python_webdriver.functions import retry_on_exception
+from python_webdriver import ChromeDriver
 
-result = retry_on_exception(
-    func=some_operation,
-    max_attempts=3,
-    polling_seconds=0.5,
-)
+browser = ChromeDriver()
+
+# These options must be set before callint browser.start() and can not be changed after the browser has started
+browser.options.set_binary_location(r"C:\Testing\Chrome\bin\chrome.exe")  # Chrome executable can also be set through options
+browser.options.set_start_maximized()  # Starts the browser window maximized
+browser.options.set_headless_mode()  # Starts the browser in headless mode (no GUI)
+browser.options.set_download_path("C:\\Testing\\Downloads")  # Sets the default download path for files
+
+browser.start()
+
 ```
 
 ### Save a screenshot or PDF
 
-```python
-browser.save_screenshot_page("./screenshots")
-browser.page_to_pdf("./exports", file_name="page.pdf", hide_elements=(".cookie-banner",))
-```
+You can save a screenshot of the entire page using `save_screenshot_page` and passing the directory to save the screenshot as argument, which will be created automatically if it does not already exist.
 
-`page_to_pdf` returns the PDF contents as bytes and also saves the PDF to the given path.
-
-### Emulate a network profile
+If successful, `save_screenshot_page` will return a Path object and the file name will be a timestamp of when the screenshot was taken (YYYYMMDD_HHMMSS.mm.png)
 
 ```python
-from python_webdriver import ChromeNetworkThrottlingProfile
+screenshot_path = browser.save_screenshot_page("C:\\Testing\\Screenshots")  # returns Path("C:\\Testing\\Screenshots\\20261102_225017.743293.png")
 
-browser.enable_network_throttling(ChromeNetworkThrottlingProfile.CELLULAR_3G)
+if screenshot_path:
+    print(f"Screenshot saved at: {screenshot_path}")
+else:
+    print("Failed to save screenshot.")
 ```
+
+Alternatively, you can save the current page as a PDF document using `page_to_pdf`
+
+```python
+browser.page_to_pdf(
+    "C:\\Testing\\Downloads",
+    file_name="page.pdf",  # File name. Must contain the extension (.pdf)
+    hide_elements=(".cookie-banner", "#page-header", ".page-footer")  # Optional. If provided, elements matching these selectors will be hidden so they don't appear in the PDF.
+)
+```
+
+### Enable network throttling
+
+You can enable a network throttling profile to simulate a slower or no internet connection. Useful when creating robust automations that don't break on shaky internet connections.
+Just remember to disable network throttling in production.
+
+```python
+from python_webdriver import ChromeDriver, ChromeNetworkThrottlingProfile
+import os
+
+browser = ChromeDriver()
+browser.start()
+
+if os.environ.get("ENABLE_NETWORK_THROTTLING"):
+    browser.enable_network_throttling(ChromeNetworkThrottlingProfile.CELLULAR_3G)
+
+browser.goto("https://www.example.com")
+
+```
+
+Available network throttling profiles are:
+
+* OFFLINE
+* SLOW_2G
+* CELLULAR_2G
+* CELLULAR_3G
+* CELLULAR_4G
 
 ## License
 
