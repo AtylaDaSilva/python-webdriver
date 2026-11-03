@@ -1,11 +1,12 @@
 [project]
 name = "python-webdriver"
 version = "4.0.0"
-description = ""
+description = 'A thin wrapper around Selenium WebDriver for Python, providing a simplified interface built with a "retry until it works" philosophy and out-of-the-box support for logging and error handling.'
 authors = [
     {name = "AtylaDaSilva",email = "atylamendes97@gmail.com"}
 ]
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.14,<4.0"
 dependencies = [
     "selenium (>=4.44.0,<5.0.0)",
