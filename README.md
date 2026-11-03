@@ -2,6 +2,21 @@
 
 A thin wrapper around Selenium WebDriver that makes common Google Chrome automation tasks simpler, with retryable interactions, logging, and convenient browser utilities.
 
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Quick start](#quick-start)
+- [Usage and examples](#usage-and-examples)
+  - [Locate and interact with elements](#locate-and-interact-with-elements)
+  - [Using Context](#using-context)
+  - [No more waiting around](#no-more-waiting-around)
+  - [Setting Chrome executable](#setting-chrome-executable)
+  - [Setting Chrome options](#setting-chrome-options)
+  - [Save a screenshot or PDF](#save-a-screenshot-or-pdf)
+  - [Enable network throttling](#enable-network-throttling)
+- [License](#license)
+
 ## Features
 
 - Start, use, and close a Chrome WebDriver with a small API.
@@ -66,7 +81,7 @@ browser.click(
 )
 ```
 
-### Using Context
+### Using context
 
 Passing `context` to find_element will limit the scope of the search.
 
